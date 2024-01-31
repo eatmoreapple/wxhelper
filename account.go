@@ -20,16 +20,15 @@ type Account struct {
 	Wxid            string `json:"wxid"`
 	PrivateKey      string `json:"privateKey"`
 	PublicKey       string `json:"publicKey"`
-
-	bot        *Bot
-	friends    Friends
-	groups     Groups
-	fileHelper *User
+	bot             *Bot
+	friends         Friends
+	groups          Groups
+	fileHelper      *User
 }
 
 func (a *Account) Friends(update ...bool) (Friends, error) {
 	if (len(update) > 0 && update[0]) || a.friends == nil {
-		members, err := a.bot.client.GetContactList(context.Background())
+		members, err := a.bot.apiclient.GetContactList(context.Background())
 		if err != nil {
 			return nil, err
 		}

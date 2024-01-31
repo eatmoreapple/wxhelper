@@ -10,16 +10,14 @@ import (
 )
 
 type MessageRetriever interface {
-	RetrieveMessage() (<-chan *Message, error)
-	Stop() error
+	RetrieveMessage(ctx context.Context) (<-chan *Message, error)
 }
 
 type httpMessageRetriever struct {
-	ctx         context.Context
-	cancel      context.CancelFunc
 	once        sync.Once
 	messageChan chan *Message
 	client      Client
+	ctx         context.Context
 	option      httpMessageRetrieverOption
 }
 
@@ -58,33 +56,24 @@ var (
 	}
 )
 
-func (r *httpMessageRetriever) RetrieveMessage() (<-chan *Message, error) {
+func (r *httpMessageRetriever) RetrieveMessage(ctx context.Context) (<-chan *Message, error) {
 	var err error
 	r.once.Do(func() {
+		r.ctx = ctx
 		r.messageChan = make(chan *Message, r.option.messageChanSize)
 		srv := http.Server{Addr: ":" + r.option.localURL.Port(), Handler: r}
 		defer func() { go func() { _ = srv.ListenAndServe() }() }()
-		cancel := r.cancel
-		r.cancel = func() {
-			_ = r.client.HTTPUnhookSyncMsg(r.ctx)
-			_ = srv.Shutdown(r.ctx)
-			cancel()
-		}
-		_ = r.client.HTTPUnhookSyncMsg(r.ctx)
+		_ = r.client.HTTPUnhookSyncMsg(ctx)
 		opt := HookSyncMsgOption{ServerURL: r.option.serverURL, LocalURL: r.option.localURL, Timeout: time.Second * 30}
-		err = r.client.HTTPHookSyncMsg(r.ctx, opt)
+		if err = r.client.HTTPHookSyncMsg(ctx, opt); err != nil {
+			_ = srv.Shutdown(ctx)
+			return
+		}
 	})
 	if err != nil {
-		r.cancel()
 		return nil, err
 	}
 	return r.messageChan, nil
-}
-
-func (r *httpMessageRetriever) Stop() error {
-	r.cancel()
-	close(r.messageChan)
-	return nil
 }
 
 func (r *httpMessageRetriever) ServeHTTP(_ http.ResponseWriter, req *http.Request) {
@@ -104,11 +93,8 @@ var (
 	defaultLocalURL  = &url.URL{Scheme: "http", Host: "172.24.176.1:19089"}
 )
 
-func NewHttpMessageRetriever(ctx context.Context, client Client, opts ...HttpMessageRetrieverOptionFunc) MessageRetriever {
-	ctx, cancel := context.WithCancel(ctx)
+func NewHttpMessageRetriever(client Client, opts ...HttpMessageRetrieverOptionFunc) MessageRetriever {
 	r := &httpMessageRetriever{
-		ctx:    ctx,
-		cancel: cancel,
 		client: client,
 	}
 	opts = append(defaultHttpMessageRetrieverOptions, opts...)
