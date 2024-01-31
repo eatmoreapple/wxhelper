@@ -86,7 +86,7 @@ func (u *User) Owner() *Account {
 }
 
 func (u *User) SendText(content string) error {
-	return u.Owner().sendText(u, content)
+	return u.Owner().sendText(u.Wxid, content)
 }
 
 func (u *User) SendImage(img io.Reader) error {
@@ -124,6 +124,14 @@ func (f Friends) SearchByWxID(wxID string) (*Friend, bool) {
 		return nil, false
 	}
 	return search[0], true
+}
+
+func (f Friends) SearchByNickname(nickname string, limit uint) Friends {
+	return f.Search(limit, func(friend *Friend) bool { return friend.Nickname == nickname })
+}
+
+func (f Friends) SearchByRemark(remark string, limit uint) Friends {
+	return f.Search(limit, func(friend *Friend) bool { return friend.Remark == remark })
 }
 
 type Group struct{ *User }
