@@ -25,6 +25,10 @@ type APIServer struct {
 	engine      *gin.Engine
 }
 
+func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
+	return "pong", nil
+}
+
 // CheckLogin 检查是否登录
 func (a *APIServer) CheckLogin(ctx context.Context, _ struct{}) (*Result[bool], error) {
 	ok, err := a.client.CheckLogin(ctx)
@@ -115,13 +119,13 @@ func (a *APIServer) startListen() error {
 	})
 }
 
-func (a *APIServer) Run() error {
+func (a *APIServer) Run(addr string) error {
 	router := ginx.NewRouter(a.engine)
 	registerAPIServer(router, a)
 	if err := a.startListen(); err != nil {
 		return err
 	}
-	return a.engine.Run(":19089")
+	return a.engine.Run(addr)
 }
 
 func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
