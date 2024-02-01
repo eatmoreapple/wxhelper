@@ -21,44 +21,34 @@ type Account struct {
 	PrivateKey      string `json:"privateKey"`
 	PublicKey       string `json:"publicKey"`
 	bot             *Bot
-	friends         Friends
-	groups          Groups
-	fileHelper      *User
 }
 
-func (a *Account) Friends(update ...bool) (Friends, error) {
-	if (len(update) > 0 && update[0]) || a.friends == nil {
-		members, err := a.bot.client.GetContactList(context.Background())
-		if err != nil {
-			return nil, err
-		}
-		a.friends = members.Friends()
-		for _, friend := range a.friends {
-			friend.User.owner = func() *Account { return a }
-		}
+func (a *Account) Friends() (Friends, error) {
+	members, err := a.bot.client.GetContactList(context.Background())
+	if err != nil {
+		return nil, err
 	}
-	return a.friends, nil
+	friends := members.Friends()
+	for _, friend := range friends {
+		friend.User.owner = func() *Account { return a }
+	}
+	return friends, nil
 }
 
-func (a *Account) Groups(update ...bool) (Groups, error) {
-	if (len(update) > 0 && update[0]) || a.groups == nil {
-		members, err := a.bot.client.GetContactList(context.Background())
-		if err != nil {
-			return nil, err
-		}
-		a.groups = members.Groups()
-		for _, group := range a.groups {
-			group.User.owner = func() *Account { return a }
-		}
+func (a *Account) Groups() (Groups, error) {
+	members, err := a.bot.client.GetContactList(context.Background())
+	if err != nil {
+		return nil, err
 	}
-	return a.groups, nil
+	groups := members.Groups()
+	for _, group := range groups {
+		group.User.owner = func() *Account { return a }
+	}
+	return groups, nil
 }
 
 func (a *Account) FileHelper() *User {
-	if a.fileHelper == nil {
-		a.fileHelper = &User{Wxid: "filehelper", owner: func() *Account { return a }}
-	}
-	return a.fileHelper
+	return &User{Wxid: "filehelper", owner: func() *Account { return a }}
 }
 
 func (a *Account) sendText(wxID string, content string) error {
