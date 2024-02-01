@@ -1,13 +1,17 @@
 package apiserver
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -56,6 +60,32 @@ func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[
 	return OK[any](nil), nil
 }
 
+type SendImageRequest struct {
+	To          string `json:"to"`
+	Image       string `json:"image"`
+	imageReader io.Reader
+}
+
+func (a *SendImageRequest) FromContext(ctx *gin.Context) error {
+	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
+		return err
+	}
+	data, err := base64.StdEncoding.DecodeString(a.Image)
+	if err != nil {
+		return err
+	}
+	a.imageReader = bytes.NewReader(data)
+	return nil
+}
+
+func (a *APIServer) SendImage(ctx context.Context, req SendImageRequest) (*Result[any], error) {
+	err := a.client.SendImage(ctx, req.To, req.imageReader)
+	if err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
+}
+
 // GetContactList 获取联系人列表
 func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Members], error) {
 	members, err := a.client.GetContactList(ctx)
@@ -65,7 +95,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 	var entity = make(Members, 0, len(members))
 	for _, member := range members {
 		// FIXME
-		entity = append(entity, (*User)(member))
+		entity = append(entity, member)
 	}
 	return OK(entity), nil
 }

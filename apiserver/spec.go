@@ -6,4 +6,5 @@ const (
 	SendText       = "/api/send-text"
 	GetContactList = "/api/contact-list"
 	SyncMessage    = "/api/sync-message"
+	SendImage      = "/api/send-image"
 )
