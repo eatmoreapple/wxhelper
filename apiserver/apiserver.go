@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
-	. "github.com/eatmoreapple/wxhelper/apiserver/models"
+	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/gin-gonic/gin"
 	"net/http"

@@ -3,7 +3,7 @@ package msgbuffer
 import (
 	"context"
 	"errors"
-	. "github.com/eatmoreapple/wxhelper/apiserver/models"
+	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"time"
 )
 

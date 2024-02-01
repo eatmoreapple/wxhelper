@@ -40,20 +40,20 @@ func (b *Bot) GetLoginAccount() (*Account, error) {
 }
 
 func (b *Bot) Run() error {
-	messageChan, err := b.messageRetriever.RetrieveMessage()
-	if err != nil {
-		return err
-	}
-	for {
-		select {
-		case <-b.ctx.Done():
-			return b.Stop()
-		case msg := <-messageChan:
-			if b.MessageHandler != nil {
-				go b.MessageHandler(msg)
-			}
-		}
-	}
+	//messageChan, err := b.messageRetriever.RetrieveMessage()
+	//if err != nil {
+	//	return err
+	//}
+	//for {
+	//	select {
+	//	case <-b.ctx.Done():
+	//		return b.Stop()
+	//	case msg := <-messageChan:
+	//		if b.MessageHandler != nil {
+	//			go b.MessageHandler(msg)
+	//		}
+	//	}
+	//}
 }
 
 func (b *Bot) Stop() error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/url"
 	"strconv"
