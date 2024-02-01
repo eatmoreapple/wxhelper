@@ -18,7 +18,6 @@ import (
 )
 
 // APIServer 用来屏蔽微信的接口
-
 type APIServer struct {
 	client      *wxclient.Client
 	msgBuffer   msgbuffer.MessageBuffer
@@ -41,9 +40,7 @@ func (a *APIServer) GetUserInfo(ctx context.Context, _ struct{}) (*Result[*Accou
 	if err != nil {
 		return nil, err
 	}
-	// FIXME
-	entity := (*Account)(account)
-	return OK(entity), nil
+	return OK(account), nil
 }
 
 type SendTextRequest struct {
@@ -92,12 +89,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 	if err != nil {
 		return nil, err
 	}
-	var entity = make(Members, 0, len(members))
-	for _, member := range members {
-		// FIXME
-		entity = append(entity, member)
-	}
-	return OK(entity), nil
+	return OK(members), nil
 }
 
 // SyncMessage 同步消息

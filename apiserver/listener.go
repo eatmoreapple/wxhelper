@@ -2,7 +2,7 @@ package apiserver
 
 import (
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
-	. "github.com/eatmoreapple/wxhelper/apiserver/models"
+	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/goccy/go-json"
 	"net/http"
 )
