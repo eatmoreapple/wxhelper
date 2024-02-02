@@ -48,6 +48,7 @@ func (c *StructCopier[T]) Copy(from any) (result T, err error) {
 	return result, c.copyField(src, dst)
 }
 
+// copyField copies the fields from src to dst.
 func (c *StructCopier[T]) copyField(src reflect.Value, dst reflect.Value) error {
 	dstType := dst.Type()
 	for i := 0; i < dstType.NumField(); i++ {
@@ -70,16 +71,15 @@ func (c *StructCopier[T]) copyField(src reflect.Value, dst reflect.Value) error 
 	return nil
 }
 
+// Copy copies the src to dst.
 func Copy[T any](src any) (T, error) {
 	copier := StructCopier[T]{}
 	return copier.Copy(src)
 }
 
-func CopySlice[T any](from any) ([]T, error) {
+// CopySlice copies the src to dst.
+func CopySlice[T, E any](from []E) ([]T, error) {
 	srv := reflect.ValueOf(from)
-	if srv.Kind() != reflect.Slice {
-		return nil, ErrorNotSlice
-	}
 	dst := make([]T, srv.Len())
 	for i := 0; i < srv.Len(); i++ {
 		item := srv.Index(i)
