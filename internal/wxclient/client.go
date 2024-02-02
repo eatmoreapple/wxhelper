@@ -7,6 +7,7 @@ import (
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 )
@@ -143,6 +144,6 @@ func New(transport *Transport) *Client {
 }
 
 func Default() *Client {
-	transport := NewTransport("http://localhost:19088")
+	transport := NewTransport(os.Getenv("VIRTUAL_MACHINE_URL"))
 	return New(transport)
 }

@@ -8,15 +8,18 @@ ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod tidy
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --ldflags="-s -w" -o /app/apiserver apiserver/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build --ldflags="-s -w" -o /app/apiserverd ./apiserver/cmd/main.go
 
+FROM alpine:latest
 
-FROM lxh01/wxhelper-docker:3.9.5.81-v11
+WORKDIR /app
 
-COPY --from=builder /app/apiserver /home/app/.wine/drive_c/apiserver
+COPY --from=builder /app/apiserverd /app/apiserver
 
-COPY apiserver/cmd/cmd.sh /cmd.sh
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /application/zoneinfo.zip
 
-RUN chmod +x /cmd.sh
+RUN chmod +x /app/apiserver
 
-CMD ["/cmd.sh"]
+EXPOSE 19089
+
+CMD ["/app/apiserver"]

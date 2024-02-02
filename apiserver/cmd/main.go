@@ -1,11 +1,13 @@
 package main
 
-import "github.com/eatmoreapple/wxhelper/apiserver"
+import (
+	"github.com/eatmoreapple/wxhelper/apiserver"
+	"log"
+)
 
 const defaultADDR = ":19089"
 
 func main() {
-	// todo add flag here
 	srv := apiserver.Default()
-	srv.Run(defaultADDR)
+	log.Fatal(srv.Run(defaultADDR))
 }
