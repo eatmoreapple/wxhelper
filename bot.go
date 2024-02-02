@@ -37,9 +37,11 @@ func (b *Bot) syncMessage() error {
 		if err != nil {
 			return err
 		}
-		message.account = account
-		if b.MessageHandler != nil {
-			go b.MessageHandler(message)
+		for _, msg := range message {
+			msg.account = account
+			if b.MessageHandler != nil {
+				go b.MessageHandler(msg)
+			}
 		}
 	}
 }

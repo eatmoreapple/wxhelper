@@ -5,9 +5,11 @@ import (
 	"strings"
 )
 
+type empty struct{}
+
 var (
 	// internalUsers is a map of internal users.
-	internalUsers = map[string]struct{}{
+	internalUsers = map[string]empty{
 		"filehelper":            {},
 		"newsapp":               {},
 		"fmessage":              {},

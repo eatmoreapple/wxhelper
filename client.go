@@ -39,10 +39,10 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 	return c.apiclient.SendImage(ctx, to, img)
 }
 
-func (c *Client) SyncMessage(ctx context.Context) (*Message, error) {
+func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	message, err := c.apiclient.SyncMessage(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return structcopy.Copy[*Message](message)
+	return structcopy.CopySlice[*Message](message)
 }
