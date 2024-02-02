@@ -79,15 +79,15 @@ func Copy[T any](src any) (T, error) {
 
 // CopySlice copies the src to dst.
 func CopySlice[T, E any](from []E) ([]T, error) {
-	srv := reflect.ValueOf(from)
-	dst := make([]T, srv.Len())
-	for i := 0; i < srv.Len(); i++ {
-		item := srv.Index(i)
-		dstItem, err := Copy[T](item.Interface())
+	length := len(from)
+	result := make([]T, length)
+	copier := StructCopier[T]{}
+	for i := 0; i < length; i++ {
+		item, err := copier.Copy(from[i])
 		if err != nil {
 			return nil, err
 		}
-		dst[i] = dstItem
+		result[i] = item
 	}
-	return dst, nil
+	return result, nil
 }
