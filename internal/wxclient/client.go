@@ -82,8 +82,10 @@ type HookSyncMsgOption struct {
 func (c *Client) HTTPHookSyncMsg(ctx context.Context, o HookSyncMsgOption) error {
 	opt := TransportHookSyncMsgOption{
 		Url:        o.LocalURL.String(),
-		EnableHttp: true,
+		EnableHttp: 1,
 		Timeout:    strconv.Itoa(int(o.Timeout.Seconds()) * 100),
+		Ip:         o.LocalURL.Hostname(),
+		Port:       o.LocalURL.Port(),
 	}
 	resp, err := c.transport.HookSyncMsg(ctx, opt)
 	if err != nil {

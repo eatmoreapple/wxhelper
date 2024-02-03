@@ -13,7 +13,7 @@ type TransportHookSyncMsgOption struct {
 	Ip         string `json:"ip"`
 	Url        string `json:"url"`
 	Timeout    string `json:"timeout"`
-	EnableHttp bool   `json:"enableHttp"`
+	EnableHttp int    `json:"enableHttp"`
 }
 
 type Transport struct {
@@ -61,7 +61,6 @@ func (c *Transport) SendText(ctx context.Context, to string, content string) (*h
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
 	return http.DefaultClient.Do(req)
 }
 
@@ -82,7 +81,6 @@ func (c *Transport) ForwardMessage(ctx context.Context, to, msgID string) (*http
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
 	return http.DefaultClient.Do(req)
 }
 
@@ -103,7 +101,6 @@ func (c *Transport) SendImage(ctx context.Context, to, imagePath string) (*http.
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
 	return http.DefaultClient.Do(req)
 }
 
@@ -132,7 +129,6 @@ func (c *Transport) HookSyncMsg(ctx context.Context, opt TransportHookSyncMsgOpt
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
 	return http.DefaultClient.Do(req)
 }
 

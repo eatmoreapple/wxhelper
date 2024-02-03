@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -25,7 +26,9 @@ func (m *MemoryMessageBuffer) Put(ctx context.Context, msg *Message) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	case m.msgCH <- msg:
+		log.Info().Interface("message", msg).Msg("put message to buffer")
 	default:
+		log.Warn().Msg("message buffer is full")
 	}
 	return nil
 }
@@ -34,6 +37,7 @@ func (m *MemoryMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
 	for {
+		log.Info().Msg("get message from buffer")
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()

@@ -2,10 +2,13 @@ package wxhelper
 
 import (
 	"context"
+	"errors"
 	"github.com/eatmoreapple/wxhelper/apiclient"
 	"github.com/eatmoreapple/wxhelper/pkg/structcopy"
 	"io"
 )
+
+var ErrNotLogin = errors.New("user not login")
 
 type Client struct {
 	apiclient *apiclient.Client
@@ -15,6 +18,9 @@ func (c *Client) GetUserInfo(ctx context.Context) (*Account, error) {
 	account, err := c.apiclient.GetUserInfo(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if account.Account == "" {
+		return nil, ErrNotLogin
 	}
 	return structcopy.Copy[*Account](account)
 }

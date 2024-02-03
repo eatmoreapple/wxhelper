@@ -7,12 +7,16 @@ services:
       dockerfile: apiserver/cmd/Dockerfile
     ports:
       - "19089:19089"
+      - "9999:9999"
     restart: unless-stopped
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
       - PORT=19089
       - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
+      - LISTEN_ADDR=http://172.24.176.1:9999
+    depends_on:
+      - virtualmachine
 
   virtualmachine:
     image: lxh01/wxhelper-docker:3.9.5.81-v11
@@ -21,4 +25,7 @@ services:
     tty: true
     ports:
       - "8080:8080"
+      - "19088:19088"
+    environment:
+      - WINEDEBUG=fixme-all
 

@@ -105,3 +105,11 @@ func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	}
 	return r.Data, nil
 }
+
+func New(apiServerURL string) *Client {
+	return &Client{
+		transport: &Transport{
+			BaseURL: apiServerURL,
+		},
+	}
+}

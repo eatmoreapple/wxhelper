@@ -11,9 +11,11 @@ import (
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -54,6 +56,7 @@ type SendTextRequest struct {
 
 // SendText 发送文本消息
 func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[any], error) {
+	log.Info().Str("to", req.To).Str("content", req.Content).Msg("send text")
 	err := a.client.SendText(ctx, req.To, req.Content)
 	if err != nil {
 		return nil, err
@@ -98,6 +101,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 
 // SyncMessage 同步消息
 func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Message], error) {
+	log.Ctx(ctx).Info().Msg("receive sync message request")
 	message, err := a.msgBuffer.Get(ctx, time.Second*25)
 	if errors.Is(err, msgbuffer.ErrTimeout) {
 		messages := make([]*Message, 0)
@@ -110,8 +114,11 @@ func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Mes
 }
 
 func (a *APIServer) startListen() error {
-	listenURL, _ := url.Parse("http://localhost:9999")
-	go func() { _ = http.ListenAndServe(":9999", a.msgListener) }()
+	listenURL, _ := url.Parse(os.Getenv("LISTEN_ADDR"))
+	go func() {
+		log.Info().Msg("start listen")
+		_ = http.ListenAndServe(":"+listenURL.Port(), a.msgListener)
+	}()
 	time.Sleep(time.Second * 1)
 	return a.client.HTTPHookSyncMsg(context.Background(), wxclient.HookSyncMsgOption{
 		LocalURL: listenURL,
@@ -133,7 +140,7 @@ func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer 
 		client:      client,
 		msgBuffer:   msgBuffer,
 		msgListener: NewMessageListener(msgBuffer),
-		engine:      gin.New(),
+		engine:      gin.Default(),
 	}
 	return srv
 }

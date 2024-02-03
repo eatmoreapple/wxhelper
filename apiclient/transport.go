@@ -19,12 +19,11 @@ func (c *Transport) GetUserInfo(ctx context.Context) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	return http.DefaultClient.Do(req.WithContext(ctx))
+	return http.DefaultClient.Do(req)
 }
 
 // CheckLogin 检查是否登录
@@ -37,7 +36,6 @@ func (c *Transport) CheckLogin(ctx context.Context) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	return http.DefaultClient.Do(req.WithContext(ctx))
 }
 
@@ -51,7 +49,6 @@ func (c *Transport) GetContactList(ctx context.Context) (*http.Response, error) 
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	return http.DefaultClient.Do(req.WithContext(ctx))
 }
 
@@ -69,12 +66,12 @@ func (c *Transport) SendText(ctx context.Context, to, content string) (*http.Res
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, url.String(), bytes.NewBuffer(data))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	return http.DefaultClient.Do(req.WithContext(ctx))
+	req.Header.Add("Content-Type", "application/json")
+	return http.DefaultClient.Do(req)
 }
 
 func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Response, error) {
@@ -94,7 +91,6 @@ func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Re
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	return http.DefaultClient.Do(req.WithContext(ctx))
 }
 
@@ -108,6 +104,5 @@ func (c *Transport) SyncMessage(ctx context.Context) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	return http.DefaultClient.Do(req.WithContext(ctx))
 }

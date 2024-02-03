@@ -2,6 +2,7 @@ package wxhelper
 
 import (
 	"context"
+	"github.com/eatmoreapple/wxhelper/apiclient"
 )
 
 type Bot struct {
@@ -47,7 +48,7 @@ func (b *Bot) syncMessage() error {
 }
 
 func (b *Bot) Run() error {
-	return nil
+	return b.syncMessage()
 	//messageChan, err := b.messageRetriever.RetrieveMessage()
 	//if err != nil {
 	//	return err
@@ -64,7 +65,11 @@ func (b *Bot) Run() error {
 	//}
 }
 
-func (b *Bot) Stop() error {
-	b.stop()
-	return b.ctx.Err()
+func New() *Bot {
+	url := "http://localhost:19089"
+	bot := &Bot{
+		client: &Client{apiclient: apiclient.New(url)},
+	}
+	bot.ctx, bot.stop = context.WithCancel(context.Background())
+	return bot
 }
