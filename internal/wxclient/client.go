@@ -80,13 +80,13 @@ type HookSyncMsgOption struct {
 	Timeout  time.Duration
 }
 
-func (c *Client) HTTPHookSyncMsg(ctx context.Context, o HookSyncMsgOption) error {
+func (c *Client) HTTPHookSyncMsg(ctx context.Context, url *url.URL, timeout time.Duration) error {
 	opt := TransportHookSyncMsgOption{
-		Url:        o.LocalURL.String(),
+		Url:        url.String(),
 		EnableHttp: 1,
-		Timeout:    strconv.Itoa(int(o.Timeout.Seconds()) * 100),
-		Ip:         o.LocalURL.Hostname(),
-		Port:       o.LocalURL.Port(),
+		Timeout:    strconv.Itoa(int(timeout / time.Second)),
+		Ip:         url.Hostname(),
+		Port:       url.Port(),
 	}
 	resp, err := c.transport.HookSyncMsg(ctx, opt)
 	if err != nil {
@@ -96,6 +96,27 @@ func (c *Client) HTTPHookSyncMsg(ctx context.Context, o HookSyncMsgOption) error
 	var r result[any]
 	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
 
+		return err
+	}
+	if r.Code != 0 {
+		return errors.New("hook sync msg failed")
+	}
+	return nil
+}
+
+func (c *Client) HookSyncMsg(ctx context.Context, ip string, port int) error {
+	opt := TransportHookSyncMsgOption{
+		EnableHttp: 0,
+		Ip:         ip,
+		Port:       strconv.Itoa(port),
+	}
+	resp, err := c.transport.HookSyncMsg(ctx, opt)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return err
 	}
 	if r.Code != 0 {

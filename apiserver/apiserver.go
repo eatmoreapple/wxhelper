@@ -144,10 +144,7 @@ func (a *APIServer) startListen() error {
 		return err
 	}
 	go func() { _ = http.ListenAndServe(":"+listenURL.Port(), a.msgListener) }()
-	return a.client.HTTPHookSyncMsg(context.Background(), wxclient.HookSyncMsgOption{
-		LocalURL: listenURL,
-		Timeout:  time.Second * 30,
-	})
+	return a.client.HTTPHookSyncMsg(context.Background(), listenURL, time.Second*30)
 }
 
 func (a *APIServer) Run(addr string) error {
