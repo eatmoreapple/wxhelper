@@ -10,9 +10,6 @@ var (
 	// ErrorInvalidStruct is returned when the src or dst is not a struct.
 	ErrorInvalidStruct = errors.New("struct required")
 
-	// ErrorNotSlice is returned when the src is not a slice.
-	ErrorNotSlice = errors.New("slice required")
-
 	// ErrorNotPointer is returned when the dst is not a pointer.
 	ErrorNotPointer = errors.New("pointer required")
 )
