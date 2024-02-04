@@ -45,6 +45,10 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 	return c.apiclient.SendImage(ctx, to, img)
 }
 
+func (c *Client) SendFile(ctx context.Context, to string, file io.Reader) error {
+	return c.apiclient.SendFile(ctx, to, file)
+}
+
 func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	message, err := c.apiclient.SyncMessage(ctx)
 	if err != nil {

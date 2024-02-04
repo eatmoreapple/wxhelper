@@ -94,6 +94,25 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 	return r.Err()
 }
 
+func (c *Client) SendFile(ctx context.Context, to string, file io.Reader) error {
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	encoded := base64.StdEncoding.EncodeToString(data)
+
+	resp, err := c.transport.SendFile(ctx, to, encoded)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	return r.Err()
+}
+
 func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	resp, err := c.transport.SyncMessage(ctx)
 	if err != nil {

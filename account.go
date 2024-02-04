@@ -59,6 +59,10 @@ func (a *Account) sendImage(account string, img io.Reader) error {
 	return a.bot.client.SendImage(a.bot.Context(), account, img)
 }
 
+func (a *Account) sendFile(account string, file io.Reader) error {
+	return a.bot.client.SendFile(a.bot.Context(), account, file)
+}
+
 func (a *Account) SendTextToFriend(friend *Friend, content string) error {
 	return a.sendText(friend.User.Wxid, content)
 }
@@ -67,10 +71,18 @@ func (a *Account) SendImageToFriend(friend *Friend, img io.Reader) error {
 	return a.sendImage(friend.User.Wxid, img)
 }
 
+func (a *Account) SendFileToFriend(friend *Friend, file io.Reader) error {
+	return a.sendFile(friend.User.Wxid, file)
+}
+
 func (a *Account) SendTextToGroup(group *Group, content string) error {
 	return a.sendText(group.User.Wxid, content)
 }
 
 func (a *Account) SendImageToGroup(group *Group, img io.Reader) error {
 	return a.sendImage(group.User.Wxid, img)
+}
+
+func (a *Account) SendFileToGroup(group *Group, file io.Reader) error {
+	return a.sendFile(group.User.Wxid, file)
 }

@@ -19,6 +19,47 @@ import (
 	"time"
 )
 
+type SendImageRequest struct {
+	To          string `json:"to"`
+	Image       string `json:"image"`
+	imageReader io.Reader
+}
+
+type SendTextRequest struct {
+	To      string `json:"to"`
+	Content string `json:"content"`
+}
+
+func (a *SendImageRequest) FromContext(ctx *gin.Context) error {
+	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
+		return err
+	}
+	data, err := base64.StdEncoding.DecodeString(a.Image)
+	if err != nil {
+		return err
+	}
+	a.imageReader = bytes.NewReader(data)
+	return nil
+}
+
+type SendFileRequest struct {
+	To         string `json:"to"`
+	Image      string `json:"file"`
+	fileReader io.Reader
+}
+
+func (a *SendFileRequest) FromContext(ctx *gin.Context) error {
+	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
+		return err
+	}
+	data, err := base64.StdEncoding.DecodeString(a.Image)
+	if err != nil {
+		return err
+	}
+	a.fileReader = bytes.NewReader(data)
+	return nil
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client      *wxclient.Client
@@ -49,14 +90,8 @@ func (a *APIServer) GetUserInfo(ctx context.Context, _ struct{}) (*Result[*Accou
 	return OK(account), nil
 }
 
-type SendTextRequest struct {
-	To      string `json:"to"`
-	Content string `json:"content"`
-}
-
 // SendText 发送文本消息
 func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[any], error) {
-	log.Info().Str("to", req.To).Str("content", req.Content).Msg("send text")
 	err := a.client.SendText(ctx, req.To, req.Content)
 	if err != nil {
 		return nil, err
@@ -64,26 +99,16 @@ func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[
 	return OK[any](nil), nil
 }
 
-type SendImageRequest struct {
-	To          string `json:"to"`
-	Image       string `json:"image"`
-	imageReader io.Reader
-}
-
-func (a *SendImageRequest) FromContext(ctx *gin.Context) error {
-	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
-		return err
-	}
-	data, err := base64.StdEncoding.DecodeString(a.Image)
-	if err != nil {
-		return err
-	}
-	a.imageReader = bytes.NewReader(data)
-	return nil
-}
-
 func (a *APIServer) SendImage(ctx context.Context, req SendImageRequest) (*Result[any], error) {
 	err := a.client.SendImage(ctx, req.To, req.imageReader)
+	if err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
+}
+
+func (a *APIServer) SendFile(ctx context.Context, req SendFileRequest) (*Result[any], error) {
+	err := a.client.SendFile(ctx, req.To, req.fileReader)
 	if err != nil {
 		return nil, err
 	}

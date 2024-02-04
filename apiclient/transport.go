@@ -96,6 +96,27 @@ func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Re
 	return c.httpClient.Do(req)
 }
 
+func (c *Transport) SendFile(ctx context.Context, to, fileData string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.SendFile)
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"to":   to,
+		"file": fileData,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}
+
 // SyncMessage SyncMessage
 func (c *Transport) SyncMessage(ctx context.Context) (*http.Response, error) {
 	url, err := urlpkg.Parse(c.baseURL + apiserver.SyncMessage)

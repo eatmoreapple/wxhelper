@@ -95,6 +95,10 @@ func (u *User) SendImage(img io.Reader) error {
 	return u.Owner().sendImage(u.Wxid, img)
 }
 
+func (u *User) SendFile(file io.Reader) error {
+	return u.Owner().sendFile(u.Wxid, file)
+}
+
 type Friend struct{ *User }
 
 func (f *Friend) SendText(content string) error {
@@ -103,6 +107,10 @@ func (f *Friend) SendText(content string) error {
 
 func (f *Friend) SendImage(img io.Reader) error {
 	return f.Owner().SendImageToFriend(f, img)
+}
+
+func (f *Friend) SendFile(file io.Reader) error {
+	return f.Owner().SendFileToFriend(f, file)
 }
 
 type Friends []*Friend
@@ -139,8 +147,20 @@ func (f Friends) SearchByRemark(remark string, limit uint) Friends {
 type Group struct{ *User }
 
 // IsInContactList returns whether the group is in the contact list.
-func (g Group) IsInContactList() bool {
+func (g *Group) IsInContactList() bool {
 	return len(g.EncryptName) == 0
+}
+
+func (g *Group) SendText(content string) error {
+	return g.Owner().SendTextToGroup(g, content)
+}
+
+func (g *Group) SendImage(img io.Reader) error {
+	return g.Owner().SendImageToGroup(g, img)
+}
+
+func (g *Group) SendFile(file io.Reader) error {
+	return g.Owner().SendFileToGroup(g, file)
 }
 
 func (g Groups) Search(limit uint, searchFunc func(group *Group) bool) Groups {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/eatmoreapple/env"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
@@ -137,6 +138,31 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 	var r result[any]
 	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
+	file, cb, err := readerToFile(img)
+	if err != nil {
+		return err
+	}
+	defer cb()
+	stat, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	resp, err := c.transport.SendFile(ctx, to, stat.Name())
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	if r.Code == 0 {
+		return fmt.Errorf("send file failed with code %d", r.Code)
 	}
 	return nil
 }
