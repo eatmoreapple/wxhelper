@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/eatmoreapple/env"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 )
@@ -146,6 +146,6 @@ func New(transport *Transport) *Client {
 }
 
 func Default() *Client {
-	transport := NewTransport(os.Getenv("VIRTUAL_MACHINE_URL"))
+	transport := NewTransport(env.Name("VIRTUAL_MACHINE_URL").String())
 	return New(transport)
 }

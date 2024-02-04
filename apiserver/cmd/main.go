@@ -1,13 +1,12 @@
 package main
 
 import (
+	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/wxhelper/apiserver"
 	"log"
 )
 
-const defaultADDR = ":19089"
-
 func main() {
 	srv := apiserver.Default()
-	log.Fatal(srv.Run(defaultADDR))
+	log.Fatal(srv.Run(env.Name("RUN_PORT").StringOrElse(":19089")))
 }

@@ -3,6 +3,7 @@ module github.com/eatmoreapple/wxhelper
 go 1.21
 
 require (
+	github.com/eatmoreapple/env v0.0.0-20230613094802-da1bd2d529d4
 	github.com/eatmoreapple/ginx v0.0.0-20230721013508-356c4c8ccc47
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
