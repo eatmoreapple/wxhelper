@@ -1,5 +1,7 @@
 package wxhelper
 
+import "io"
+
 type Message struct {
 	Content            string `json:"content"`
 	CreateTime         int    `json:"createTime"`
@@ -40,6 +42,14 @@ func (m Message) Owner() *Account { return m.account }
 
 func (m Message) ReplyText(text string) error {
 	return m.Owner().sendText(m.FromUser, text)
+}
+
+func (m Message) ReplyImage(img io.Reader) error {
+	return m.Owner().sendImage(m.FromUser, img)
+}
+
+func (m Message) ReplyFile(file io.Reader) error {
+	return m.Owner().sendFile(m.FromUser, file)
 }
 
 type MessageHandler func(msg *Message)
