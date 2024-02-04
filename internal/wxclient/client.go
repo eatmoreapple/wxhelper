@@ -104,7 +104,7 @@ func (c *Client) HTTPHookSyncMsg(ctx context.Context, o HookSyncMsgOption) error
 	return nil
 }
 
-func (c *Client) HTTPUnhookSyncMsg(ctx context.Context) error {
+func (c *Client) UnhookSyncMsg(ctx context.Context) error {
 	resp, err := c.transport.UnhookSyncMsg(ctx)
 	if err != nil {
 		return err
