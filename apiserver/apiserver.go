@@ -139,12 +139,11 @@ func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Mes
 }
 
 func (a *APIServer) startListen() error {
-	listenURL, _ := url.Parse(os.Getenv("LISTEN_ADDR"))
-	go func() {
-		log.Info().Msg("start listen")
-		_ = http.ListenAndServe(":"+listenURL.Port(), a.msgListener)
-	}()
-	time.Sleep(time.Second * 1)
+	listenURL, err := url.Parse(os.Getenv("LISTEN_ADDR"))
+	if err != nil {
+		return err
+	}
+	go func() { _ = http.ListenAndServe(":"+listenURL.Port(), a.msgListener) }()
 	return a.client.HTTPHookSyncMsg(context.Background(), wxclient.HookSyncMsgOption{
 		LocalURL: listenURL,
 		Timeout:  time.Second * 30,
