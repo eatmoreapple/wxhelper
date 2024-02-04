@@ -1,6 +1,7 @@
 package wxclient
 
 import (
+	"github.com/eatmoreapple/env"
 	"io"
 	"os"
 )
@@ -10,7 +11,7 @@ func readerToFile(reader io.Reader) (file *os.File, cb func(), err error) {
 	if file, ok = reader.(*os.File); ok {
 		return file, func() {}, nil
 	}
-	file, err = os.CreateTemp("", "*")
+	file, err = os.CreateTemp(env.Name("TEMP_DIR").String(), "*")
 	if err != nil {
 		return nil, nil, err
 	}

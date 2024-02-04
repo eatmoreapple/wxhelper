@@ -7,7 +7,6 @@ services:
       dockerfile: apiserver/cmd/Dockerfile
     ports:
       - "19089:19089"
-      - "9999:9999"
     restart: unless-stopped
     environment:
       - TZ=Asia/Shanghai
@@ -15,12 +14,14 @@ services:
       - RUN_PORT=:19089
       - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
       - LISTEN_ADDR=http://172.28.1.1:9999
+      - TEMP_DIR=/app/data
     depends_on:
       - virtualmachine
     networks:
       wxhelper: # FIXME 在wine中无法使用服务名解析，所以需要使用固定ip
         ipv4_address: 172.28.1.1
-
+    volumes:
+      - ./data/wechat:/app/data
 
   virtualmachine:
     image: lxh01/wxhelper-docker:3.9.5.81-v11
@@ -35,6 +36,8 @@ services:
     networks:
       wxhelper:
         ipv4_address: 172.28.1.2
+    volumes:
+      - ./data/wechat:/home/app/.wine/drive_c
 
 networks:
   wxhelper:

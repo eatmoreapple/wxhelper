@@ -126,11 +126,9 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 		return err
 	}
 	defer cb()
-	stat, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	resp, err := c.transport.SendImage(ctx, to, stat.Name())
+	// 转换成windows下c盘的路径
+	filepath := fmt.Sprintf("C:\\%s", file.Name())
+	resp, err := c.transport.SendImage(ctx, to, filepath)
 	if err != nil {
 		return err
 	}
@@ -148,11 +146,9 @@ func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
 		return err
 	}
 	defer cb()
-	stat, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	resp, err := c.transport.SendFile(ctx, to, stat.Name())
+	// 转换成windows下c盘的路径
+	filepath := fmt.Sprintf("C:\\%s", file.Name())
+	resp, err := c.transport.SendFile(ctx, to, filepath)
 	if err != nil {
 		return err
 	}
