@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.7'
 
 services:
   apiserver:
@@ -14,9 +14,13 @@ services:
       - GIN_MODE=release
       - RUN_PORT=:19089
       - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
-      - LISTEN_ADDR=http://172.24.176.1:9999
+      - LISTEN_ADDR=http://172.28.1.1:9999
     depends_on:
       - virtualmachine
+    networks:
+      wxhelper: # FIXME 在wine中无法使用服务名解析，所以需要使用固定ip
+        ipv4_address: 172.28.1.1
+
 
   virtualmachine:
     image: lxh01/wxhelper-docker:3.9.5.81-v11
@@ -28,4 +32,13 @@ services:
       - "19088:19088"
     environment:
       - WINEDEBUG=fixme-all
+    networks:
+      wxhelper:
+        ipv4_address: 172.28.1.2
 
+networks:
+  wxhelper:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
