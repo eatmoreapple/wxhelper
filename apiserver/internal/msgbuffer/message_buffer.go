@@ -3,7 +3,9 @@ package msgbuffer
 import (
 	"context"
 	"errors"
+	"github.com/eatmoreapple/env"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
+	"github.com/go-redis/redis/v8"
 	"time"
 )
 
@@ -22,5 +24,13 @@ type MessageBuffer interface {
 }
 
 func Default() MessageBuffer {
+	if add := env.Name("MSG_QUEUE_ADDR").String(); len(add) > 0 {
+		// 先简单一点
+		client := redis.NewClient(&redis.Options{
+			Network: "tcp",
+			Addr:    add,
+		})
+		return NewRedisMessageBuffer(client, "")
+	}
 	return NewMemoryMessageBuffer(100)
 }

@@ -15,6 +15,7 @@ services:
       - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
       - LISTEN_ADDR=http://172.28.1.1:9999
       - TEMP_DIR=/app/data
+      - MSG_QUEUE_ADDR=redis:6379
     depends_on:
       - virtualmachine
     networks:
@@ -30,14 +31,17 @@ services:
     tty: true
     ports:
       - "8080:8080"
-      - "19088:19088"
     environment:
       - WINEDEBUG=fixme-all
-    networks:
-      wxhelper:
-        ipv4_address: 172.28.1.2
     volumes:
       - ./data/wechat:/home/app/.wine/drive_c
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data
 
 networks:
   wxhelper:
