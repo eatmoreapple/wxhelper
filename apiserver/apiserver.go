@@ -103,7 +103,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Message], error) {
 	log.Ctx(ctx).Info().Msg("receive sync message request")
 	message, err := a.msgBuffer.Get(ctx, time.Second*25)
-	if errors.Is(err, msgbuffer.ErrTimeout) {
+	if errors.Is(err, msgbuffer.ErrNoMessage) {
 		messages := make([]*Message, 0)
 		return OK(messages), nil
 	}

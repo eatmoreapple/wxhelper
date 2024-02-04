@@ -34,7 +34,7 @@ func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Me
 		return nil, err
 	}
 	if len(msgs) == 0 {
-		return nil, ErrTimeout
+		return nil, ErrNoMessage
 	}
 	if len(msgs) != 2 {
 		return nil, errors.New("invalid message")
@@ -46,6 +46,9 @@ func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Me
 	return &msg, nil
 }
 
-func NewRedisMessageBuffer(client *redis.Client) *RedisMessageBuffer {
-	return &RedisMessageBuffer{client: client}
+func NewRedisMessageBuffer(client *redis.Client, queue string) *RedisMessageBuffer {
+	if queue == "" {
+		queue = "wechat:message:queue"
+	}
+	return &RedisMessageBuffer{client: client, queue: queue}
 }

@@ -32,7 +32,7 @@ func (m *MemoryMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case <-timer.C:
-			return nil, ErrTimeout
+			return nil, ErrNoMessage
 		case msg := <-m.msgCH:
 			return msg, nil
 		}
