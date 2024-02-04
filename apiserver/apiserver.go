@@ -60,6 +60,10 @@ func (a *SendFileRequest) FromContext(ctx *gin.Context) error {
 	return nil
 }
 
+type GetChatRoomInfoRequest struct {
+	ChatRoomID string `json:"chatRoomId"`
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client      *wxclient.Client
@@ -136,6 +140,14 @@ func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Mes
 		return nil, err
 	}
 	return OK([]*Message{message}), nil
+}
+
+func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRequest) (*Result[*ChatRoomInfo], error) {
+	info, err := a.client.GetChatRoomDetail(ctx, req.ChatRoomID)
+	if err != nil {
+		return nil, err
+	}
+	return OK(info), nil
 }
 
 func (a *APIServer) startListen() error {

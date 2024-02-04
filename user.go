@@ -163,6 +163,17 @@ func (g *Group) SendFile(file io.Reader) error {
 	return g.Owner().SendFileToGroup(g, file)
 }
 
+type GroupInfo struct {
+	ChatRoomID string
+	Notice     string
+	Admin      string
+	XML        string
+}
+
+func (g *Group) Info() (*GroupInfo, error) {
+	return g.Owner().bot.client.GetChatRoomInfo(g.Owner().bot.Context(), g.Wxid)
+}
+
 func (g Groups) Search(limit uint, searchFunc func(group *Group) bool) Groups {
 	var search = make(Groups, 0)
 	for _, group := range g {

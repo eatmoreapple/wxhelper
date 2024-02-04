@@ -126,6 +126,22 @@ func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	return r.Data, nil
 }
 
+func (c *Client) GetChatRoomDetail(ctx context.Context, chatRoomId string) (*ChatRoomInfo, error) {
+	resp, err := c.transport.GetChatRoomDetail(ctx, chatRoomId)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[ChatRoomInfo]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, err
+	}
+	if err = r.Err(); err != nil {
+		return nil, err
+	}
+	return &r.Data, nil
+}
+
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{

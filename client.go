@@ -56,3 +56,12 @@ func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 	}
 	return structcopy.CopySlice[*Message](message)
 }
+
+func (c *Client) GetChatRoomInfo(ctx context.Context, chatRoomID string) (*GroupInfo, error) {
+	chatRoomInfo, err := c.apiclient.GetChatRoomDetail(ctx, chatRoomID)
+	if err != nil {
+		return nil, err
+	}
+	return structcopy.Copy[*GroupInfo](chatRoomInfo)
+
+}

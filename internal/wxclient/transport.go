@@ -164,6 +164,25 @@ func (c *Transport) UnhookSyncMsg(ctx context.Context) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
 }
 
+func (c *Transport) GetChatRoomDetail(ctx context.Context, chatRoomId string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.BaseURL + "/api/getChatRoomDetailInfo")
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"chatRoomId": chatRoomId,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
 func NewTransport(baseURL string) *Transport {
 	return &Transport{BaseURL: baseURL}
 }

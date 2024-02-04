@@ -129,3 +129,23 @@ func (c *Transport) SyncMessage(ctx context.Context) (*http.Response, error) {
 	}
 	return c.httpClient.Do(req)
 }
+
+func (c *Transport) GetChatRoomDetail(ctx context.Context, chatRoomID string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.GetChatRoomDetail)
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"chatRoomID": chatRoomID,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}

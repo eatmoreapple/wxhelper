@@ -184,6 +184,22 @@ func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
 	return nil
 }
 
+func (c *Client) GetChatRoomDetail(ctx context.Context, chatRoomId string) (*ChatRoomInfo, error) {
+	resp, err := c.transport.GetChatRoomDetail(ctx, chatRoomId)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[ChatRoomInfo]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, err
+	}
+	if r.Code != 1 {
+		return nil, errors.New("get chat room detail failed")
+	}
+	return &r.Data, nil
+}
+
 func New(transport *Transport) *Client {
 	return &Client{transport: transport}
 }
