@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
+	"net/http"
 )
 
 type Client struct {
@@ -109,7 +110,8 @@ func (c *Client) SyncMessage(ctx context.Context) ([]*Message, error) {
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{
-			BaseURL: apiServerURL,
+			baseURL:    apiServerURL,
+			httpClient: &http.Client{},
 		},
 	}
 }
