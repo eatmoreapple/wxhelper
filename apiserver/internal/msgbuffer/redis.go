@@ -34,7 +34,7 @@ func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Me
 		return nil, ErrNoMessage
 	}
 	if len(msgs) != 2 {
-		// unreachable
+		// unreachable, but just in case
 		return nil, errors.New("invalid message")
 	}
 	var msg Message

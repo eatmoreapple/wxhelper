@@ -14,7 +14,7 @@ services:
       - RUN_PORT=:19089
       - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
       - TEMP_DIR=/app/data # 跟virtualmachine的volume挂载目录一致
-      - MSG_QUEUE_ADDR=redis:6379
+      - MSG_QUEUE_ADDR=redis:6379 # redis 消息队列地址
     depends_on:
       - virtualmachine
       - redis

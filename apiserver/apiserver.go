@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
@@ -15,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -158,12 +158,9 @@ func (a *APIServer) startListen() error {
 	}
 	addr := strings.TrimSpace(string(ipAddr))
 	port := 9999
-	listenURL := fmt.Sprintf(":%d", port)
-	if err != nil {
-		return err
-	}
+	listenURL := ":" + strconv.Itoa(port)
 	go func() { _ = a.msgListener.ListenAndServe(listenURL) }()
-	return a.client.HookSyncMsg(context.Background(), addr, 9999)
+	return a.client.HookSyncMsg(context.Background(), addr, port)
 }
 
 func (a *APIServer) Run(addr string) error {
@@ -175,12 +172,22 @@ func (a *APIServer) Run(addr string) error {
 	return a.engine.Run(addr)
 }
 
+func initEngine() *gin.Engine {
+	engine := gin.Default()
+	engine.Use(func(c *gin.Context) {
+		// 注入logger
+		ctx := log.Logger.WithContext(c.Request.Context())
+		c.Request = c.Request.WithContext(ctx)
+	})
+	return engine
+}
+
 func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	srv := &APIServer{
 		client:      client,
 		msgBuffer:   msgBuffer,
 		msgListener: NewMessageListener(msgBuffer),
-		engine:      gin.Default(),
+		engine:      initEngine(),
 	}
 	return srv
 }

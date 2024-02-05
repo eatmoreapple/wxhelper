@@ -14,6 +14,7 @@ var (
 	ErrNoMessage = errors.New("no message found")
 )
 
+// MessageBuffer 存储消息的容器
 type MessageBuffer interface {
 	// Put adds a message to the buffer.
 	Put(ctx context.Context, msg *Message) error
