@@ -29,17 +29,19 @@ func (m *MessageListener) ListenAndServe(addr string) error {
 	}
 }
 
-func (m *MessageListener) serve(coon net.Conn) error {
+func (m *MessageListener) serve(coon net.Conn) {
 	log.Info().Msg("receive new message")
 	defer func() { _ = coon.Close() }()
 	defer func() { _, _ = coon.Write([]byte("200 OK")) }()
 	var msg Message
 	if err := json.NewDecoder(coon).Decode(&msg); err != nil {
 		log.Warn().Err(err).Msg("decode message failed")
-		return err
+		return
 	}
 	log.Info().Msg("parse message successfully")
-	return m.MessageBuffer.Put(context.TODO(), &msg)
+	if err := m.MessageBuffer.Put(context.TODO(), &msg); err != nil {
+		log.Error().Err(err).Msg("put message failed")
+	}
 }
 
 func NewMessageListener(msgBuffer msgbuffer.MessageBuffer) *MessageListener {

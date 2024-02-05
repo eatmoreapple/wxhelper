@@ -6,16 +6,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
+	"github.com/eatmoreapple/wxhelper/apiserver/internal/netutil"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"io"
-	"os/exec"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -151,15 +151,13 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 }
 
 func (a *APIServer) startListen() error {
-	cmd := exec.Command("hostname", "-i")
-	ipAddr, err := cmd.Output()
+	// fixme: wine中无法根据service name 获取ip，所以需要获取apiserver的ip
+	addr, err := netutil.GetHostIP()
 	if err != nil {
 		return err
 	}
-	addr := strings.TrimSpace(string(ipAddr))
-	port := 9999
-	listenURL := ":" + strconv.Itoa(port)
-	go func() { _ = a.msgListener.ListenAndServe(listenURL) }()
+	port := env.Name("MSG_LISTENER_PORT").IntOrElse(9999)
+	go func() { _ = a.msgListener.ListenAndServe(":" + strconv.Itoa(port)) }()
 	return a.client.HookSyncMsg(context.Background(), addr, port)
 }
 
