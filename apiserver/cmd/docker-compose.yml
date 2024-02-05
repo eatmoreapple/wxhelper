@@ -25,6 +25,7 @@ services:
     image: lxh01/wxhelper-docker:3.9.5.81-v11
     container_name: virtualmachine
     restart: unless-stopped
+    user: "1000:1000"
     tty: true
     ports:
       - "8080:8080"
