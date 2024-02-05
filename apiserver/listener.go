@@ -1,38 +1,55 @@
 package apiserver
 
 import (
+	"bytes"
+	"context"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/goccy/go-json"
 	"github.com/rs/zerolog/log"
-	"net/http"
+	"io"
+	"net"
 )
 
-type MessageListener interface {
-	http.Handler
-}
-
-type messageListener struct {
+type MessageListener struct {
 	msgbuffer.MessageBuffer
 }
 
-func (m *messageListener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("receive message")
-	var msg Message
-	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-		log.Error().Err(err).Msg("decode message failed")
-		return
+func (m *MessageListener) ListenAndServe(addr string) error {
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
 	}
-	log.Info().Interface("message", msg).Msg("receive message")
-	if err := m.MessageBuffer.Put(r.Context(), &msg); err != nil {
-		log.Error().Err(err).Msg("put message to buffer failed")
+	defer func() { _ = listener.Close() }()
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			return err
+		}
+		go func(coon net.Conn) {
+			if err = m.serve(conn); err != nil {
+				log.Error().Err(err).Msg("failed to serve")
+			}
+		}(conn)
 	}
-	// {"code": 0, "msg": "success"}
-	_, _ = w.Write([]byte(`{"code": 0, "msg": "success"}`))
 }
 
-func NewMessageListener(msgBuffer msgbuffer.MessageBuffer) MessageListener {
-	return &messageListener{
+func (m *MessageListener) serve(coon net.Conn) error {
+	defer func() { _ = coon.Close() }()
+	defer func() { _, _ = coon.Write([]byte("200 OK")) }()
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, coon); err != nil {
+		return err
+	}
+	var msg Message
+	if err := json.NewDecoder(&buf).Decode(&msg); err != nil {
+		return err
+	}
+	return m.MessageBuffer.Put(context.TODO(), &msg)
+}
+
+func NewMessageListener(msgBuffer msgbuffer.MessageBuffer) *MessageListener {
+	return &MessageListener{
 		MessageBuffer: msgBuffer,
 	}
 }

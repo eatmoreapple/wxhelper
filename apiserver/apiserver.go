@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
@@ -13,8 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"io"
-	"net/http"
-	"net/url"
 	"os/exec"
 	"strings"
 	"time"
@@ -69,7 +68,7 @@ type GetChatRoomInfoRequest struct {
 type APIServer struct {
 	client      *wxclient.Client
 	msgBuffer   msgbuffer.MessageBuffer
-	msgListener MessageListener
+	msgListener *MessageListener
 	engine      *gin.Engine
 }
 
@@ -157,17 +156,14 @@ func (a *APIServer) startListen() error {
 	if err != nil {
 		return err
 	}
-	port := "9999"
-	listenURL := "http://" + strings.TrimSpace(string(ipAddr)) + ":" + port
-	u, err := url.Parse(listenURL)
+	addr := strings.TrimSpace(string(ipAddr))
+	port := 9999
+	listenURL := fmt.Sprintf(":%d", port)
 	if err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
-	go func() { _ = http.ListenAndServe(":"+port, a.msgListener) }()
-	return a.client.HTTPHookSyncMsg(context.Background(), u, time.Second*30)
+	go func() { _ = a.msgListener.ListenAndServe(listenURL) }()
+	return a.client.HookSyncMsg(context.Background(), addr, 9999)
 }
 
 func (a *APIServer) Run(addr string) error {
