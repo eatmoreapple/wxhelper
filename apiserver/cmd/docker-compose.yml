@@ -32,6 +32,11 @@ services:
       - WINEDEBUG=fixme-all
     volumes:
       - ./data/wechat:/home/app/.wine/drive_c/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:19088/api/checkLogin" ]
+      interval: 30s
+      timeout: 20s # 一般是20s旁边完成注入
+      retries: 5
 
   redis:
     image: redis:alpine
