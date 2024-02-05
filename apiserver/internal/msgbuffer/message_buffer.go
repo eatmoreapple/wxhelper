@@ -27,8 +27,9 @@ func Default() MessageBuffer {
 	if add := env.Name("MSG_QUEUE_ADDR").String(); len(add) > 0 {
 		// 先简单一点
 		client := redis.NewClient(&redis.Options{
-			Network: "tcp",
-			Addr:    add,
+			Network:  "tcp",
+			Addr:     add,
+			PoolSize: 10,
 		})
 		return NewRedisMessageBuffer(client, "")
 	}
