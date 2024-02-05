@@ -18,7 +18,7 @@ COPY --from=builder /app/apiserverd /app/apiserver
 
 RUN apk add tzdata && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
 
-COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /application/zoneinfo.zip
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /app/zoneinfo.zip
 
 ENV ZONEINFO=/app/zoneinfo.zip
 
