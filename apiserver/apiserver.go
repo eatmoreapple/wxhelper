@@ -174,11 +174,7 @@ func (a *APIServer) Run(addr string) error {
 
 func initEngine() *gin.Engine {
 	engine := gin.Default()
-	engine.Use(func(c *gin.Context) {
-		// 注入logger
-		ctx := log.Logger.WithContext(c.Request.Context())
-		c.Request = c.Request.WithContext(ctx)
-	})
+	engine.Use(func(c *gin.Context) { c.Request = c.Request.WithContext(log.Logger.WithContext(c.Request.Context())) })
 	return engine
 }
 

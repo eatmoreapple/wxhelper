@@ -1,13 +1,11 @@
 package apiserver
 
 import (
-	"bytes"
 	"context"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/goccy/go-json"
 	"github.com/rs/zerolog/log"
-	"io"
 	"net"
 )
 
@@ -27,11 +25,7 @@ func (m *MessageListener) ListenAndServe(addr string) error {
 		if err != nil {
 			return err
 		}
-		go func(coon net.Conn) {
-			if err = m.serve(conn); err != nil {
-				log.Error().Err(err).Msg("failed to serve")
-			}
-		}(conn)
+		go m.serve(conn)
 	}
 }
 
@@ -39,12 +33,9 @@ func (m *MessageListener) serve(coon net.Conn) error {
 	log.Info().Msg("receive new message")
 	defer func() { _ = coon.Close() }()
 	defer func() { _, _ = coon.Write([]byte("200 OK")) }()
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, coon); err != nil {
-		return err
-	}
 	var msg Message
-	if err := json.NewDecoder(&buf).Decode(&msg); err != nil {
+	if err := json.NewDecoder(coon).Decode(&msg); err != nil {
+		log.Warn().Err(err).Msg("decode message failed")
 		return err
 	}
 	log.Info().Msg("parse message successfully")
