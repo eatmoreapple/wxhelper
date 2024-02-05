@@ -24,6 +24,9 @@ func (r RedisMessageBuffer) Put(ctx context.Context, msg *Message) error {
 
 func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Message, error) {
 	msgs, err := r.client.BRPop(ctx, timeout, r.queue).Result()
+	if errors.Is(err, redis.Nil) {
+		return nil, ErrNoMessage
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +34,7 @@ func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Me
 		return nil, ErrNoMessage
 	}
 	if len(msgs) != 2 {
+		// unreachable
 		return nil, errors.New("invalid message")
 	}
 	var msg Message
