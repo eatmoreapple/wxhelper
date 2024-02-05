@@ -12,14 +12,10 @@ services:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
       - RUN_PORT=:19089
-      - VIRTUAL_MACHINE_URL=http://172.28.1.2:19088
-      - LISTEN_ADDR=http://172.28.1.1:9999
+      - VIRTUAL_MACHINE_URL=http://virtualmachine:19088
       - TEMP_DIR=/app/data # 跟virtualmachine的volume挂载目录一致
     depends_on:
       - virtualmachine
-    networks:
-      wxhelper: # FIXME 在wine中无法使用服务名解析，所以需要使用固定ip
-        ipv4_address: 172.28.1.1
     volumes:
       - ./data/wechat:/app/data
 
@@ -34,9 +30,6 @@ services:
       - WINEDEBUG=fixme-all
     volumes:
       - ./data/wechat:/home/app/.wine/drive_c/data
-    networks:
-      wxhelper:
-        ipv4_address: 172.28.1.2
 
 #  redis:
 #    image: redis:alpine
@@ -44,10 +37,3 @@ services:
 #    restart: unless-stopped
 #    volumes:
 #      - ./data/redis:/data
-
-networks:
-  wxhelper:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.28.0.0/16

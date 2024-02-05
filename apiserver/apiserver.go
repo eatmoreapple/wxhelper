@@ -15,7 +15,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -151,12 +152,22 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 }
 
 func (a *APIServer) startListen() error {
-	listenURL, err := url.Parse(os.Getenv("LISTEN_ADDR"))
+	cmd := exec.Command("hostname", "-i")
+	ipAddr, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	go func() { _ = http.ListenAndServe(":"+listenURL.Port(), a.msgListener) }()
-	return a.client.HTTPHookSyncMsg(context.Background(), listenURL, time.Second*30)
+	port := "9999"
+	listenURL := "http://" + strings.TrimSpace(string(ipAddr)) + ":" + port
+	u, err := url.Parse(listenURL)
+	if err != nil {
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	go func() { _ = http.ListenAndServe(":"+port, a.msgListener) }()
+	return a.client.HTTPHookSyncMsg(context.Background(), u, time.Second*30)
 }
 
 func (a *APIServer) Run(addr string) error {
