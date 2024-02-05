@@ -20,6 +20,7 @@ func (m *MessageListener) ListenAndServe(addr string) error {
 	if err != nil {
 		return err
 	}
+	log.Info().Msg("listening on " + addr)
 	defer func() { _ = listener.Close() }()
 	for {
 		conn, err := listener.Accept()
@@ -35,6 +36,7 @@ func (m *MessageListener) ListenAndServe(addr string) error {
 }
 
 func (m *MessageListener) serve(coon net.Conn) error {
+	log.Info().Msg("receive new message")
 	defer func() { _ = coon.Close() }()
 	defer func() { _, _ = coon.Write([]byte("200 OK")) }()
 	var buf bytes.Buffer
@@ -45,6 +47,7 @@ func (m *MessageListener) serve(coon net.Conn) error {
 	if err := json.NewDecoder(&buf).Decode(&msg); err != nil {
 		return err
 	}
+	log.Info().Msg("parse message successfully")
 	return m.MessageBuffer.Put(context.TODO(), &msg)
 }
 
