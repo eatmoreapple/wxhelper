@@ -1,33 +1,23 @@
 package wxclient
 
 import (
+	"fmt"
 	"github.com/eatmoreapple/env"
 	"io"
 	"os"
+	"path/filepath"
 )
 
-func readerToFile(reader io.Reader) (file *os.File, cb func(), err error) {
-	var ok bool
-	if file, ok = reader.(*os.File); ok {
-		return file, func() {}, nil
-	}
-	file, err = os.CreateTemp(env.Name("TEMP_DIR").String(), "*")
+func saveToLocal(reader io.Reader) (path string, err error) {
+	file, err := os.CreateTemp(env.Name("TEMP_DIR").String(), "*")
 	if err != nil {
-		return nil, nil, err
+		return "", err
 	}
-	cb = func() {
-		_ = file.Close()
-		_ = os.Remove(file.Name())
+	defer func() { _ = file.Close() }()
+	if _, err = io.Copy(file, reader); err != nil {
+		return "", err
 	}
-	_, err = io.Copy(file, reader)
-	if err != nil {
-		cb()
-		return nil, nil, err
-	}
-	_, err = file.Seek(0, io.SeekStart)
-	if err != nil {
-		cb()
-		return nil, nil, err
-	}
-	return file, cb, nil
+	filename := filepath.Base(file.Name())
+	// 转换为windows路径
+	return fmt.Sprintf("C:\\data\\%s", filename), nil
 }

@@ -9,7 +9,6 @@ import (
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/url"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -143,17 +142,11 @@ func (c *Client) UnhookSyncMsg(ctx context.Context) error {
 }
 
 func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error {
-	file, cb, err := readerToFile(img)
+	filename, err := saveToLocal(img)
 	if err != nil {
 		return err
 	}
-	defer cb()
-	if err = file.Close(); err != nil {
-		return err
-	}
-	// 转换成windows下c盘的路径
-	filePath := fmt.Sprintf("C:\\data\\%s", filepath.Base(file.Name()))
-	resp, err := c.transport.SendImage(ctx, to, filePath)
+	resp, err := c.transport.SendImage(ctx, to, filename)
 	if err != nil {
 		return err
 	}
@@ -166,17 +159,11 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 }
 
 func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
-	file, cb, err := readerToFile(img)
+	filename, err := saveToLocal(img)
 	if err != nil {
 		return err
 	}
-	defer cb()
-	if err = file.Close(); err != nil {
-		return err
-	}
-	// 转换成windows下c盘的路径
-	filePath := fmt.Sprintf("C:\\data\\%s", filepath.Base(file.Name()))
-	resp, err := c.transport.SendFile(ctx, to, filePath)
+	resp, err := c.transport.SendFile(ctx, to, filename)
 	if err != nil {
 		return err
 	}
