@@ -17,6 +17,7 @@ services:
       - MSG_QUEUE_ADDR=redis:6379
     depends_on:
       - virtualmachine
+      - redis
     volumes:
       - ./data/wechat:/app/data
 

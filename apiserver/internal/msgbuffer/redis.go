@@ -15,7 +15,11 @@ type RedisMessageBuffer struct {
 }
 
 func (r RedisMessageBuffer) Put(ctx context.Context, msg *Message) error {
-	return r.client.LPush(ctx, r.queue, msg).Err()
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return r.client.LPush(ctx, r.queue, data).Err()
 }
 
 func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Message, error) {
