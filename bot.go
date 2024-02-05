@@ -65,10 +65,11 @@ func (b *Bot) Run() error {
 	//}
 }
 
-func New() *Bot {
-	url := "http://localhost:19089"
+func New(apiServerURL string) *Bot {
 	bot := &Bot{
-		client: &Client{apiclient: apiclient.New(url)},
+		client: &Client{
+			apiclient: apiclient.New(apiServerURL),
+		},
 	}
 	bot.ctx, bot.stop = context.WithCancel(context.Background())
 	return bot
