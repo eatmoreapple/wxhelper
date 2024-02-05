@@ -9,6 +9,7 @@ import (
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -147,9 +148,12 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 		return err
 	}
 	defer cb()
+	if err = file.Close(); err != nil {
+		return err
+	}
 	// 转换成windows下c盘的路径
-	filepath := fmt.Sprintf("C:\\%s", file.Name())
-	resp, err := c.transport.SendImage(ctx, to, filepath)
+	filePath := fmt.Sprintf("C:\\data\\%s", filepath.Base(file.Name()))
+	resp, err := c.transport.SendImage(ctx, to, filePath)
 	if err != nil {
 		return err
 	}
@@ -167,9 +171,12 @@ func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
 		return err
 	}
 	defer cb()
+	if err = file.Close(); err != nil {
+		return err
+	}
 	// 转换成windows下c盘的路径
-	filepath := fmt.Sprintf("C:\\%s", file.Name())
-	resp, err := c.transport.SendFile(ctx, to, filepath)
+	filePath := fmt.Sprintf("C:\\data\\%s", filepath.Base(file.Name()))
+	resp, err := c.transport.SendFile(ctx, to, filePath)
 	if err != nil {
 		return err
 	}
