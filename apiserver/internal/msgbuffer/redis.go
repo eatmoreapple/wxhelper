@@ -15,20 +15,10 @@ type RedisMessageBuffer struct {
 }
 
 func (r RedisMessageBuffer) Put(ctx context.Context, msg *Message) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
 	return r.client.LPush(ctx, r.queue, msg).Err()
 }
 
 func (r RedisMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Message, error) {
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-	}
 	msgs, err := r.client.BRPop(ctx, timeout, r.queue).Result()
 	if err != nil {
 		return nil, err
