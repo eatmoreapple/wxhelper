@@ -66,10 +66,9 @@ type GetChatRoomInfoRequest struct {
 
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
-	client      *wxclient.Client
-	msgBuffer   msgbuffer.MessageBuffer
-	msgListener *MessageListener
-	engine      *gin.Engine
+	client    *wxclient.Client
+	msgBuffer msgbuffer.MessageBuffer
+	engine    *gin.Engine
 }
 
 func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
@@ -151,13 +150,24 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 }
 
 func (a *APIServer) startListen() error {
-	// fixme: wine中无法根据service name 获取ip，所以需要获取apiserver的ip
+	// fixme: wine中无法根据service name进行dns解析，所以需要获取apiserver的ip
 	addr, err := netutil.GetHostIP()
 	if err != nil {
 		return err
 	}
 	port := env.Name("MSG_LISTENER_PORT").IntOrElse(9999)
-	go func() { _ = a.msgListener.ListenAndServe(":" + strconv.Itoa(port)) }()
+
+	{
+		msgListener := &TCPMessageListener{Addr: ":" + strconv.Itoa(port)}
+		// 定义消息处理行为，将获取到的消息塞进队列中
+		var handler MessageHandlerFunc = func(message *Message) {
+			_ = a.msgBuffer.Put(context.TODO(), message)
+		}
+		// 避免阻塞
+		go func() { _ = msgListener.ListenAndServe(handler) }()
+	}
+
+	// 尝试去注册消息回调
 	return a.client.HookSyncMsg(context.Background(), addr, port)
 }
 
@@ -178,10 +188,9 @@ func initEngine() *gin.Engine {
 
 func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	srv := &APIServer{
-		client:      client,
-		msgBuffer:   msgBuffer,
-		msgListener: NewMessageListener(msgBuffer),
-		engine:      initEngine(),
+		client:    client,
+		msgBuffer: msgBuffer,
+		engine:    initEngine(),
 	}
 	return srv
 }
