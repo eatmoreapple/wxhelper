@@ -17,3 +17,11 @@ type User struct {
 }
 
 type Members []*User
+
+type GroupMember struct {
+	ChatRoomID     string `json:"chatRoomId"`
+	Members        string `json:"members"`
+	MemberNickname string `json:"memberNickname"`
+	Admin          string `json:"admin"`
+	AdminNickname  string `json:"adminNickname"`
+}

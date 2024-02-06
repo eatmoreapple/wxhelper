@@ -163,6 +163,10 @@ func (g *Group) SendFile(file io.Reader) error {
 	return g.Owner().SendFileToGroup(g, file)
 }
 
+func (g *Group) Members() (*GroupMember, error) {
+	return g.Owner().bot.client.GetChatRoomMembers(g.Owner().bot.Context(), g.Wxid)
+}
+
 type GroupInfo struct {
 	ChatRoomID string
 	Notice     string
@@ -232,4 +236,12 @@ func (l Members) Search(limit uint, searchFunc func(user *User) bool) Members {
 		}
 	}
 	return search
+}
+
+type GroupMember struct {
+	ChatRoomID     string
+	Members        string
+	MemberNickname string
+	Admin          string
+	AdminNickname  string
 }

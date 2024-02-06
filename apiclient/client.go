@@ -142,6 +142,22 @@ func (c *Client) GetChatRoomDetail(ctx context.Context, chatRoomId string) (*Cha
 	return &r.Data, nil
 }
 
+func (c *Client) GetMemberFromChatRoom(ctx context.Context, chatRoomId string) (*GroupMember, error) {
+	resp, err := c.transport.GetMemberFromChatRoom(ctx, chatRoomId)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[GroupMember]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, err
+	}
+	if err = r.Err(); err != nil {
+		return nil, err
+	}
+	return &r.Data, nil
+}
+
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{

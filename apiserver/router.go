@@ -12,4 +12,6 @@ func registerAPIServer(router *ginx.Router, server *APIServer) {
 	router.POST(SendText, ginx.G(server.SendText).JSON())
 	router.POST(SendImage, ginx.G(server.SendImage).JSON())
 	router.POST(SendFile, ginx.G(server.SendFile).JSON())
+	router.GET(GetChatRoomDetail, ginx.G(server.GetChatRoomDetail).JSON())
+	router.GET(GetMemberFromChatRoom, ginx.G(server.GetMemberFromChatRoom).JSON())
 }

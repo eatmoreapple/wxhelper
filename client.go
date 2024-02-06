@@ -63,5 +63,12 @@ func (c *Client) GetChatRoomInfo(ctx context.Context, chatRoomID string) (*Group
 		return nil, err
 	}
 	return structcopy.Copy[*GroupInfo](chatRoomInfo)
+}
 
+func (c *Client) GetChatRoomMembers(ctx context.Context, chatRoomID string) (*GroupMember, error) {
+	members, err := c.apiclient.GetMemberFromChatRoom(ctx, chatRoomID)
+	if err != nil {
+		return nil, err
+	}
+	return structcopy.Copy[*GroupMember](members)
 }

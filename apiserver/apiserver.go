@@ -64,6 +64,10 @@ type GetChatRoomInfoRequest struct {
 	ChatRoomID string `json:"chatRoomId"`
 }
 
+type GetMemberFromChatRoomRequest struct {
+	ChatRoomID string `json:"chatRoomId"`
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
@@ -147,6 +151,14 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 		return nil, err
 	}
 	return OK(info), nil
+}
+
+func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[*GroupMember], error) {
+	members, err := a.client.GetMemberFromChatRoom(ctx, req.ChatRoomID)
+	if err != nil {
+		return nil, err
+	}
+	return OK(members), nil
 }
 
 func (a *APIServer) startListen() error {
