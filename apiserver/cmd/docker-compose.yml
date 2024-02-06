@@ -8,6 +8,7 @@ services:
     ports:
       - "19089:19089"
     restart: unless-stopped
+    user: "1000:1000"
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
