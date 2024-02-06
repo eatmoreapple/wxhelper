@@ -183,6 +183,27 @@ func (c *Transport) GetChatRoomDetail(ctx context.Context, chatRoomId string) (*
 	return http.DefaultClient.Do(req)
 }
 
+func (c *Transport) ModifyNickname(ctx context.Context, chatRoomId, wxId, nickname string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.BaseURL + "/api/modifyNickname")
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"chatRoomId": chatRoomId,
+		"wxid":       wxId,
+		"nickName":   nickname,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
 func NewTransport(baseURL string) *Transport {
 	return &Transport{BaseURL: baseURL}
 }
