@@ -7,7 +7,6 @@ require (
 	github.com/eatmoreapple/ginx v0.0.0-20230721013508-356c4c8ccc47
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/goccy/go-json v0.10.2
 	github.com/rs/zerolog v1.31.0
 )
 
@@ -34,6 +33,7 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect

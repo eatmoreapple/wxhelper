@@ -9,6 +9,7 @@ import (
 	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
+	"github.com/eatmoreapple/wxhelper/apiserver/internal/taskpool"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/eatmoreapple/wxhelper/pkg/netutil"
@@ -16,6 +17,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -153,12 +156,39 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 	return OK(info), nil
 }
 
-func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[*GroupMember], error) {
+func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[[]*ContactProfile], error) {
 	members, err := a.client.GetMemberFromChatRoom(ctx, req.ChatRoomID)
 	if err != nil {
 		return nil, err
 	}
-	return OK(members), nil
+	memberIds := strings.Split(members.Members, "^G")
+	result := make([]*ContactProfile, len(memberIds))
+	// 并发获取用户信息
+	loopCtx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+	var wg sync.WaitGroup
+	for i, memberId := range memberIds {
+		wg.Add(1)
+		handler := func(index int, id string) func() {
+			return func() {
+				defer wg.Done()
+				profile, err := a.client.GetContactProfile(loopCtx, id)
+				if err != nil {
+					cancel(err)
+					return
+				}
+				result[index] = profile
+			}
+		}
+		if err = taskpool.Do(loopCtx, handler(i, memberId)); err != nil {
+			return nil, err
+		}
+	}
+	wg.Wait()
+	if err = loopCtx.Err(); err != nil {
+		return nil, err
+	}
+	return OK(result), nil
 }
 
 func (a *APIServer) startListen() error {

@@ -25,3 +25,11 @@ type GroupMember struct {
 	Admin          string `json:"admin"`
 	AdminNickname  string `json:"adminNickname"`
 }
+
+type ContactProfile struct {
+	Account   string `json:"account"`
+	HeadImage string `json:"headImage"`
+	Nickname  string `json:"nickname"`
+	V3        string `json:"v3"`
+	Wxid      string `json:"wxid"`
+}

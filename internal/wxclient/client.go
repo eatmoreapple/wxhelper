@@ -210,6 +210,22 @@ func (c *Client) GetMemberFromChatRoom(ctx context.Context, chatRoomId string) (
 	return &r.Data, nil
 }
 
+func (c *Client) GetContactProfile(ctx context.Context, wxid string) (*ContactProfile, error) {
+	resp, err := c.transport.GetContactProfile(ctx, wxid)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[ContactProfile]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, err
+	}
+	if r.Code < 0 {
+		return nil, errors.New("get contact profile failed")
+	}
+	return &r.Data, nil
+}
+
 func New(transport *Transport) *Client {
 	return &Client{transport: transport}
 }
