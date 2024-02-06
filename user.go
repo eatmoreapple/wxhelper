@@ -163,7 +163,7 @@ func (g *Group) SendFile(file io.Reader) error {
 	return g.Owner().SendFileToGroup(g, file)
 }
 
-func (g *Group) Members() ([]*ContactProfile, error) {
+func (g *Group) Members() ([]*Profile, error) {
 	return g.Owner().bot.client.GetChatRoomMembers(g.Owner().bot.Context(), g.Wxid)
 }
 
@@ -238,7 +238,7 @@ func (l Members) Search(limit uint, searchFunc func(user *User) bool) Members {
 	return search
 }
 
-type ContactProfile struct {
+type Profile struct {
 	Account   string `json:"account"`
 	HeadImage string `json:"headImage"`
 	Nickname  string `json:"nickname"`

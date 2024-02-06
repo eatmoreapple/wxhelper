@@ -65,10 +65,10 @@ func (c *Client) GetChatRoomInfo(ctx context.Context, chatRoomID string) (*Group
 	return structcopy.Copy[*GroupInfo](chatRoomInfo)
 }
 
-func (c *Client) GetChatRoomMembers(ctx context.Context, chatRoomID string) ([]*ContactProfile, error) {
+func (c *Client) GetChatRoomMembers(ctx context.Context, chatRoomID string) ([]*Profile, error) {
 	members, err := c.apiclient.GetMemberFromChatRoom(ctx, chatRoomID)
 	if err != nil {
 		return nil, err
 	}
-	return structcopy.CopySlice[*ContactProfile](members)
+	return structcopy.CopySlice[*Profile](members)
 }

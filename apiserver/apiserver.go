@@ -156,13 +156,13 @@ func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRe
 	return OK(info), nil
 }
 
-func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[[]*ContactProfile], error) {
+func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[[]*Profile], error) {
 	members, err := a.client.GetMemberFromChatRoom(ctx, req.ChatRoomID)
 	if err != nil {
 		return nil, err
 	}
 	memberIds := strings.Split(members.Members, "^G")
-	result := make([]*ContactProfile, len(memberIds))
+	result := make([]*Profile, len(memberIds))
 	// 并发获取用户信息
 	loopCtx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)

@@ -26,7 +26,7 @@ type GroupMember struct {
 	AdminNickname  string `json:"adminNickname"`
 }
 
-type ContactProfile struct {
+type Profile struct {
 	Account   string `json:"account"`
 	HeadImage string `json:"headImage"`
 	Nickname  string `json:"nickname"`

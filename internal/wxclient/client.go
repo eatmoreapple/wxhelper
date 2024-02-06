@@ -210,13 +210,13 @@ func (c *Client) GetMemberFromChatRoom(ctx context.Context, chatRoomId string) (
 	return &r.Data, nil
 }
 
-func (c *Client) GetContactProfile(ctx context.Context, wxid string) (*ContactProfile, error) {
+func (c *Client) GetContactProfile(ctx context.Context, wxid string) (*Profile, error) {
 	resp, err := c.transport.GetContactProfile(ctx, wxid)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	var r result[ContactProfile]
+	var r result[Profile]
 	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return nil, err
 	}
