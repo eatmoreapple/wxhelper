@@ -1,6 +1,7 @@
 package wxhelper
 
 import (
+	"github.com/eatmoreapple/wxhelper/apiclient"
 	"io"
 	"strings"
 )
@@ -168,7 +169,7 @@ func (g *Group) Members() ([]*Profile, error) {
 }
 
 func (g *Group) SendAtText(content string, memberIDs ...string) error {
-	return g.Owner().bot.client.SendAtText(g.Owner().bot.Context(), sendAtTextOption{
+	return g.Owner().bot.client.SendAtText(g.Owner().bot.Context(), apiclient.SendAtTextOption{
 		GroupID: g.Wxid,
 		AtList:  memberIDs,
 		Content: content,
