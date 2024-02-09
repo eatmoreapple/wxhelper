@@ -5,6 +5,7 @@ type resultCode int
 const (
 	resultCodeOk resultCode = iota
 	resultCodeErr
+	resultCodeAuthErr
 )
 
 type Result[T any] struct {

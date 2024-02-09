@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -80,8 +81,9 @@ type SendAtTextRequest struct {
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
-	msgBuffer msgbuffer.MessageBuffer
 	engine    *gin.Engine
+	msgBuffer msgbuffer.MessageBuffer
+	status    int32
 }
 
 func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
@@ -226,6 +228,9 @@ func (a *APIServer) startListen() error {
 		go func() { _ = msgListener.ListenAndServe(handler) }()
 	}
 
+	// 定时检查登录状态
+	go loginStatusCheck(a, time.Second/10)
+
 	// 尝试去注册消息回调
 	return a.client.HookSyncMsg(context.Background(), addr, port)
 }
@@ -256,4 +261,21 @@ func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer 
 
 func Default() *APIServer {
 	return New(wxclient.Default(), msgbuffer.Default())
+}
+
+func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
+	ticker := time.NewTicker(loopInterval)
+	defer ticker.Stop()
+	for {
+		ok, err := server.client.CheckLogin(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msg("check login failed")
+		}
+		if ok {
+			atomic.SwapInt32(&server.status, 1)
+		} else {
+			atomic.SwapInt32(&server.status, 0)
+		}
+		<-ticker.C
+	}
 }
