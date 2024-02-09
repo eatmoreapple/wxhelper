@@ -1,6 +1,11 @@
 package wxhelper
 
-import "io"
+import (
+	"encoding/base64"
+	"errors"
+	"io"
+	"strings"
+)
 
 type Message struct {
 	Content            string `json:"content"`
@@ -38,6 +43,14 @@ func (m Message) IsVoice() bool {
 	return m.Type == 34
 }
 
+func (m Message) IsAtMe() bool {
+	return strings.HasSuffix(m.DisplayFullContent, "在群聊中@了你")
+}
+
+func (m Message) IsGroupMessage() bool {
+	return strings.HasSuffix(m.FromUser, "@chatroom")
+}
+
 func (m Message) Owner() *Account { return m.account }
 
 func (m Message) ReplyText(text string) error {
@@ -50,6 +63,18 @@ func (m Message) ReplyImage(img io.Reader) error {
 
 func (m Message) ReplyFile(file io.Reader) error {
 	return m.Owner().sendFile(m.FromUser, file)
+}
+
+func (m Message) SaveImage(writer io.Writer) error {
+	if !m.IsImage() {
+		return errors.New("not an image message")
+	}
+	data, err := base64.StdEncoding.DecodeString(m.Base64Img)
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write(data)
+	return err
 }
 
 type MessageHandler func(msg *Message)
