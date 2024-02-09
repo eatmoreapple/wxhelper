@@ -2,6 +2,12 @@ package apiclient
 
 import "errors"
 
+var ErrAuth = errors.New("auth error")
+
+const (
+	authErrCode = 2
+)
+
 type Result[T any] struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
@@ -16,5 +22,10 @@ func (r Result[T]) Err() error {
 	if r.OK() {
 		return nil
 	}
-	return errors.New(r.Msg)
+	switch r.Code {
+	case authErrCode:
+		return ErrAuth
+	default:
+		return errors.New(r.Msg)
+	}
 }
