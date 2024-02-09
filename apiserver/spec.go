@@ -10,4 +10,5 @@ const (
 	SendFile              = "/api/send-file"
 	GetChatRoomDetail     = "/api/chat-room-detail"
 	GetMemberFromChatRoom = "/api/member-from-chat-room"
+	SendAtText            = "/api/send-at-text"
 )

@@ -169,3 +169,26 @@ func (c *Transport) GetMemberFromChatRoom(ctx context.Context, chatRoomID string
 	req.Header.Add("Content-Type", "application/json")
 	return c.httpClient.Do(req)
 }
+
+type SendAtTextOption struct {
+	GroupID string   `json:"groupId"`
+	AtList  []string `json:"atList"`
+	Content string   `json:"content"`
+}
+
+func (c *Transport) SendAtText(ctx context.Context, option SendAtTextOption) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.SendAtText)
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(option)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}

@@ -158,6 +158,19 @@ func (c *Client) GetMemberFromChatRoom(ctx context.Context, chatRoomId string) (
 	return r.Data, nil
 }
 
+func (c *Client) SendAtText(ctx context.Context, opt SendAtTextOption) error {
+	resp, err := c.transport.SendAtText(ctx, opt)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	return r.Err()
+}
+
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{

@@ -16,6 +16,12 @@ type TransportHookSyncMsgOption struct {
 	EnableHttp int    `json:"enableHttp"`
 }
 
+type sendAtTextOption struct {
+	ChatRoomId string `json:"chatRoomId"`
+	WxIds      string `json:"wxids"`
+	Msg        string `json:"msg"`
+}
+
 type Transport struct {
 	BaseURL string
 }
@@ -252,6 +258,22 @@ func (c *Transport) GetContactProfile(ctx context.Context, wxid string) (*http.R
 		"wxid": wxid,
 	}
 	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
+func (c *Transport) SendAtText(ctx context.Context, option sendAtTextOption) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.BaseURL + "/api/sendAtText")
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(option)
 	if err != nil {
 		return nil, err
 	}

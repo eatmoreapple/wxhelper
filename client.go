@@ -72,3 +72,17 @@ func (c *Client) GetChatRoomMembers(ctx context.Context, chatRoomID string) ([]*
 	}
 	return structcopy.CopySlice[*Profile](members)
 }
+
+type sendAtTextOption struct {
+	GroupID string   `json:"groupId"`
+	AtList  []string `json:"atList"`
+	Content string   `json:"content"`
+}
+
+func (c *Client) SendAtText(ctx context.Context, option sendAtTextOption) error {
+	return c.apiclient.SendAtText(ctx, apiclient.SendAtTextOption{
+		GroupID: option.GroupID,
+		AtList:  option.AtList,
+		Content: option.Content,
+	})
+}

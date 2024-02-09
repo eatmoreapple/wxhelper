@@ -71,6 +71,12 @@ type GetMemberFromChatRoomRequest struct {
 	ChatRoomID string `json:"chatRoomId"`
 }
 
+type SendAtTextRequest struct {
+	GroupID string   `json:"groupId"`
+	AtList  []string `json:"atList"`
+	Content string   `json:"content"`
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
@@ -189,6 +195,17 @@ func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFrom
 		return nil, err
 	}
 	return OK(result), nil
+}
+
+func (a *APIServer) SendAtText(ctx context.Context, req SendAtTextRequest) (*Result[any], error) {
+	if err := a.client.SendAtText(ctx, wxclient.SendAtTextOption{
+		ChatRoomID: req.GroupID,
+		WxIds:      req.AtList,
+		Content:    req.Content,
+	}); err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
 }
 
 func (a *APIServer) startListen() error {

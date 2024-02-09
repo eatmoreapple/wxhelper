@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -224,6 +225,32 @@ func (c *Client) GetContactProfile(ctx context.Context, wxid string) (*Profile, 
 		return nil, errors.New("get contact profile failed")
 	}
 	return &r.Data, nil
+}
+
+type SendAtTextOption struct {
+	WxIds      []string
+	ChatRoomID string
+	Content    string
+}
+
+func (c *Client) SendAtText(ctx context.Context, opt SendAtTextOption) error {
+	resp, err := c.transport.SendAtText(ctx, sendAtTextOption{
+		WxIds:      strings.Join(opt.WxIds, ","),
+		ChatRoomId: opt.ChatRoomID,
+		Msg:        opt.Content,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	if r.Code < 0 {
+		return errors.New("send at text failed")
+	}
+	return nil
 }
 
 func New(transport *Transport) *Client {

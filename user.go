@@ -167,6 +167,18 @@ func (g *Group) Members() ([]*Profile, error) {
 	return g.Owner().bot.client.GetChatRoomMembers(g.Owner().bot.Context(), g.Wxid)
 }
 
+func (g *Group) SendAtText(content string, memberIDs ...string) error {
+	return g.Owner().bot.client.SendAtText(g.Owner().bot.Context(), sendAtTextOption{
+		GroupID: g.Wxid,
+		AtList:  memberIDs,
+		Content: content,
+	})
+}
+
+func (g *Group) SendAtALLTextMsg(content string) error {
+	return g.SendAtText(content, "notify@all")
+}
+
 type GroupInfo struct {
 	ChatRoomID string
 	Notice     string
