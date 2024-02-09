@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/eatmoreapple/env"
-	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/taskpool"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
@@ -236,8 +235,8 @@ func (a *APIServer) startListen() error {
 }
 
 func (a *APIServer) Run(addr string) error {
-	router := ginx.NewRouter(a.engine)
-	registerAPIServer(router, a)
+	//router := ginx.NewRouter(a.engine)
+	registerAPIServer(a)
 	if err := a.startListen(); err != nil {
 		return err
 	}

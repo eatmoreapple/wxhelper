@@ -3,14 +3,34 @@ package apiserver
 import (
 	"github.com/eatmoreapple/ginx"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"sync/atomic"
 )
 
-func registerAPIServer(router *ginx.Router, server *APIServer) {
-	router.GET(CheckLogin, ginx.G(server.CheckLogin).JSON())
+// todo 修改掉这里
+func registerAPIServer(server *APIServer) {
+	server.engine.Use(func(context *gin.Context) {
+		context.Set("apiserver", server)
+	})
 
+	server.engine.GET(CheckLogin, func(context *gin.Context) {
+		result, err := server.CheckLogin(context, struct{}{})
+		if err != nil {
+			context.JSON(http.StatusOK, Err[any](err.Error()))
+		} else {
+			context.JSON(http.StatusOK, result)
+		}
+	})
 	{
-		router.Use(loginRequired)
+		server.engine.Use(func(context *gin.Context) {
+			apiserver := context.MustGet("apiserver").(*APIServer)
+			if atomic.LoadInt32(&apiserver.status) != 1 {
+				context.AbortWithStatusJSON(401, Result[any]{Code: resultCodeAuthErr, Msg: "not login"})
+				return
+			}
+			context.Next()
+		})
+		router := ginx.NewRouter(server.engine)
 		router.GET(GetUserInfo, ginx.G(server.GetUserInfo).JSON())
 		router.GET(GetContactList, ginx.G(server.GetContactList).JSON())
 		router.GET(SyncMessage, ginx.G(server.SyncMessage).JSON())
@@ -21,12 +41,4 @@ func registerAPIServer(router *ginx.Router, server *APIServer) {
 		router.POST(GetMemberFromChatRoom, ginx.G(server.GetMemberFromChatRoom).JSON())
 		router.POST(SendAtText, ginx.G(server.SendAtText).JSON())
 	}
-}
-
-var loginRequired ginx.HandlerWrapper = func(ctx *gin.Context) error {
-	apiserver := ctx.MustGet("apiserver").(*APIServer)
-	if atomic.LoadInt32(&apiserver.status) != 1 {
-		ctx.AbortWithStatusJSON(401, Result[any]{Code: resultCodeAuthErr, Msg: "not login"})
-	}
-	return nil
 }
