@@ -264,14 +264,7 @@ func (a *APIServer) Run(addr string) error {
 		Addr:    addr,
 		Handler: registerAPIServer(a),
 	}
-	go func() {
-		if err := loginStatusCheck(a, time.Second*5); err != nil {
-			log.Error().Err(err).Msg("login status check failed")
-		}
-		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Err(err).Msg("server shutdown")
-		}
-	}()
+	go loginStatusCheck(a, time.Second*5)
 	return srv.ListenAndServe()
 }
 
@@ -287,14 +280,15 @@ func Default() *APIServer {
 	return New(wxclient.Default(), msgbuffer.Default())
 }
 
-func loginStatusCheck(server *APIServer, loopInterval time.Duration) error {
+func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
 	ticker := time.NewTicker(loopInterval)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
 		ok, err := server.client.CheckLogin(context.Background())
 		if err != nil {
-			return errors.Wrap(err, "check login failed")
+			// 无法获取登录状态
+			// 没有启动或者退出登录
 		}
 		log.Info().Bool("login", ok).Msg("check login")
 		if ok {
