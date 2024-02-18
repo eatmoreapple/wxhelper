@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/taskpool"
@@ -13,8 +12,10 @@ import (
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/eatmoreapple/wxhelper/pkg/netutil"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -83,6 +84,7 @@ type APIServer struct {
 	engine    *gin.Engine
 	msgBuffer msgbuffer.MessageBuffer
 	status    int32
+	stop      chan struct{}
 }
 
 func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
@@ -144,15 +146,41 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 // SyncMessage 同步消息
 func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Message], error) {
 	log.Ctx(ctx).Info().Msg("receive sync message request")
-	message, err := a.msgBuffer.Get(ctx, time.Second*25)
-	if errors.Is(err, msgbuffer.ErrNoMessage) {
-		messages := make([]*Message, 0)
-		return OK(messages), nil
+	var cancel context.CancelCauseFunc
+	ctx, cancel = context.WithCancelCause(ctx)
+
+	msgCh := make(chan *Message)
+	errCh := make(chan error)
+	{
+		defer close(errCh)
+		defer close(msgCh)
 	}
-	if err != nil {
-		return nil, err
+
+	messages := make([]*Message, 0)
+	go func() {
+		message, err := a.msgBuffer.Get(ctx, time.Second*25)
+		if err != nil {
+			if errors.Is(err, msgbuffer.ErrNoMessage) {
+				err = nil
+			}
+			cancel(err)
+		} else {
+			msgCh <- message
+		}
+	}()
+
+	var err error
+
+	select {
+	case <-ctx.Done():
+		err = ctx.Err()
+	case <-a.stop:
+		err = errors.New("server stopped")
+	case err = <-errCh:
+	case msg := <-msgCh:
+		messages = append(messages, msg)
 	}
-	return OK([]*Message{message}), nil
+	return OK(messages), err
 }
 
 func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRequest) (*Result[*ChatRoomInfo], error) {
@@ -227,20 +255,28 @@ func (a *APIServer) startListen() error {
 		go func() { _ = msgListener.ListenAndServe(handler) }()
 	}
 
-	// 定时检查登录状态
-	go loginStatusCheck(a, time.Second/10)
-
 	// 尝试去注册消息回调
 	return a.client.HookSyncMsg(context.Background(), addr, port)
 }
 
 func (a *APIServer) Run(addr string) error {
-	//router := ginx.NewRouter(a.engine)
 	registerAPIServer(a)
 	if err := a.startListen(); err != nil {
 		return err
 	}
-	return a.engine.Run(addr)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: a.engine.Handler(),
+	}
+	go func() {
+		if err := loginStatusCheck(a, time.Second*5); err != nil {
+			log.Error().Err(err).Msg("login status check failed")
+		}
+		if err := srv.Shutdown(context.Background()); err != nil {
+			log.Err(err).Msg("server shutdown")
+		}
+	}()
+	return srv.ListenAndServe()
 }
 
 func initEngine() *gin.Engine {
@@ -254,6 +290,7 @@ func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer 
 		client:    client,
 		msgBuffer: msgBuffer,
 		engine:    initEngine(),
+		stop:      make(chan struct{}),
 	}
 	return srv
 }
@@ -262,19 +299,24 @@ func Default() *APIServer {
 	return New(wxclient.Default(), msgbuffer.Default())
 }
 
-func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
+func loginStatusCheck(server *APIServer, loopInterval time.Duration) error {
 	ticker := time.NewTicker(loopInterval)
 	defer ticker.Stop()
 	for {
+		<-ticker.C
 		ok, err := server.client.CheckLogin(context.Background())
 		if err != nil {
-			log.Error().Err(err).Msg("check login failed")
+			return errors.Wrap(err, "check login failed")
 		}
+		log.Info().Bool("login", ok).Msg("check login")
 		if ok {
 			atomic.SwapInt32(&server.status, 1)
 		} else {
 			atomic.SwapInt32(&server.status, 0)
+			select {
+			case server.stop <- struct{}{}:
+			default:
+			}
 		}
-		<-ticker.C
 	}
 }
