@@ -81,7 +81,6 @@ type SendAtTextRequest struct {
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
-	engine    *gin.Engine
 	msgBuffer msgbuffer.MessageBuffer
 	status    int32
 	stop      chan struct{}
@@ -260,13 +259,12 @@ func (a *APIServer) startListen() error {
 }
 
 func (a *APIServer) Run(addr string) error {
-	registerAPIServer(a)
 	if err := a.startListen(); err != nil {
 		return err
 	}
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: a.engine.Handler(),
+		Handler: registerAPIServer(a),
 	}
 	go func() {
 		if err := loginStatusCheck(a, time.Second*5); err != nil {
@@ -279,17 +277,10 @@ func (a *APIServer) Run(addr string) error {
 	return srv.ListenAndServe()
 }
 
-func initEngine() *gin.Engine {
-	engine := gin.Default()
-	engine.Use(func(c *gin.Context) { c.Request = c.Request.WithContext(log.Logger.WithContext(c.Request.Context())) })
-	return engine
-}
-
 func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	srv := &APIServer{
 		client:    client,
 		msgBuffer: msgBuffer,
-		engine:    initEngine(),
 		stop:      make(chan struct{}),
 	}
 	return srv
