@@ -83,7 +83,8 @@ type APIServer struct {
 	client    *wxclient.Client
 	msgBuffer msgbuffer.MessageBuffer
 	status    int32
-	stop      chan struct{}
+	ctx       context.Context
+	stop      context.CancelCauseFunc
 }
 
 func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
@@ -173,8 +174,8 @@ func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Mes
 	select {
 	case <-ctx.Done():
 		err = ctx.Err()
-	case <-a.stop:
-		err = errors.New("server stopped")
+	case <-a.ctx.Done():
+		err = a.ctx.Err()
 	case err = <-errCh:
 	case msg := <-msgCh:
 		messages = append(messages, msg)
@@ -219,9 +220,6 @@ func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFrom
 		}
 	}
 	wg.Wait()
-	if err = loopCtx.Err(); err != nil {
-		return nil, err
-	}
 	return OK(result), nil
 }
 
@@ -281,7 +279,6 @@ func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer 
 	srv := &APIServer{
 		client:    client,
 		msgBuffer: msgBuffer,
-		stop:      make(chan struct{}),
 	}
 	return srv
 }
@@ -304,10 +301,6 @@ func loginStatusCheck(server *APIServer, loopInterval time.Duration) error {
 			atomic.SwapInt32(&server.status, 1)
 		} else {
 			atomic.SwapInt32(&server.status, 0)
-			select {
-			case server.stop <- struct{}{}:
-			default:
-			}
 		}
 	}
 }
