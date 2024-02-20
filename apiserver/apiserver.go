@@ -93,6 +93,7 @@ type APIServer struct {
 	status    int32
 	ctx       context.Context
 	stop      context.CancelCauseFunc
+	checker   Checker
 }
 
 func (a *APIServer) IsLogin() bool {
@@ -195,16 +196,24 @@ func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFrom
 	}
 	memberIds := strings.Split(members.Members, "^G")
 
-	result := make([]*Profile, len(memberIds))
+	ctx, cancel := context.WithCancelCause(ctx)
 
-	eg, ctx := errgroup.WithContext(ctx)
+	var eg errgroup.Group
 
 	eg.SetLimit(runtime.NumCPU())
 
+	result := make([]*Profile, len(memberIds))
+
 	handler := func(index int, id string) func() error {
 		return func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
 			profile, err := a.client.GetContactProfile(ctx, id)
 			if err != nil {
+				cancel(err)
 				return err
 			}
 			result[index] = profile
@@ -267,7 +276,7 @@ func (a *APIServer) Run(addr string) error {
 		Addr:    addr,
 		Handler: registerAPIServer(a),
 	}
-	go loginStatusCheck(a, time.Second*5)
+	go a.checker.Check(a.ctx)
 	return srv.ListenAndServe()
 }
 
@@ -279,30 +288,10 @@ func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer 
 		ctx:       ctx,
 		stop:      cancel,
 	}
+	srv.checker = &loginChecker{srv: srv, loopInterval: time.Second / 5}
 	return srv
 }
 
 func Default() *APIServer {
 	return New(wxclient.Default(), msgbuffer.Default())
-}
-
-func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
-	ticker := time.NewTicker(loopInterval)
-	defer ticker.Stop()
-	for {
-		<-ticker.C
-		ok, err := server.client.CheckLogin(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("check IsLogin status")
-		}
-		log.Info().Bool("IsLogin", ok).Msg("check IsLogin")
-		if ok {
-			server.login()
-		} else {
-			if server.IsLogin() {
-				server.logout()
-				return
-			}
-		}
-	}
 }
