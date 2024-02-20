@@ -38,7 +38,7 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:19088/api/checkLogin" ]
       interval: 30s
       timeout: 20s # 一般是20s旁边完成注入
-      retries: 5
+      retries: 3
 
   redis:
     image: redis:alpine

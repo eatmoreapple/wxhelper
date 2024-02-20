@@ -5,20 +5,20 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
-	"github.com/eatmoreapple/wxhelper/apiserver/internal/taskpool"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/eatmoreapple/wxhelper/pkg/netutil"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -146,41 +146,17 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 // SyncMessage 同步消息
 func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Message], error) {
 	log.Ctx(ctx).Info().Msg("receive sync message request")
-	var cancel context.CancelCauseFunc
-	ctx, cancel = context.WithCancelCause(ctx)
-
-	msgCh := make(chan *Message)
-	errCh := make(chan error)
-	{
-		defer close(errCh)
-		defer close(msgCh)
-	}
-
 	messages := make([]*Message, 0)
-	go func() {
-		message, err := a.msgBuffer.Get(ctx, time.Second*25)
-		if err != nil {
-			if errors.Is(err, msgbuffer.ErrNoMessage) {
-				err = nil
-			}
-			cancel(err)
-		} else {
-			msgCh <- message
-		}
-	}()
 
-	var err error
-
-	select {
-	case <-ctx.Done():
-		err = ctx.Err()
-	case <-a.ctx.Done():
-		err = a.ctx.Err()
-	case err = <-errCh:
-	case msg := <-msgCh:
-		messages = append(messages, msg)
+	message, err := a.msgBuffer.Get(ctx, time.Second*25)
+	if errors.Is(err, msgbuffer.ErrNoMessage) {
+		return OK(messages), nil
 	}
-	return OK(messages), err
+	if err != nil {
+		return nil, err
+	}
+	messages = append(messages, message)
+	return OK(messages), nil
 }
 
 func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRequest) (*Result[*ChatRoomInfo], error) {
@@ -197,29 +173,29 @@ func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFrom
 		return nil, err
 	}
 	memberIds := strings.Split(members.Members, "^G")
+
 	result := make([]*Profile, len(memberIds))
-	// 并发获取用户信息
-	loopCtx, cancel := context.WithCancelCause(ctx)
-	defer cancel(nil)
-	var wg sync.WaitGroup
-	for i, memberId := range memberIds {
-		wg.Add(1)
-		handler := func(index int, id string) func() {
-			return func() {
-				defer wg.Done()
-				profile, err := a.client.GetContactProfile(loopCtx, id)
-				if err != nil {
-					cancel(err)
-					return
-				}
-				result[index] = profile
+
+	eg, ctx := errgroup.WithContext(ctx)
+
+	eg.SetLimit(runtime.NumCPU())
+
+	handler := func(index int, id string) func() error {
+		return func() error {
+			profile, err := a.client.GetContactProfile(ctx, id)
+			if err != nil {
+				return err
 			}
-		}
-		if err = taskpool.Do(loopCtx, handler(i, memberId)); err != nil {
-			return nil, err
+			result[index] = profile
+			return nil
 		}
 	}
-	wg.Wait()
+	for i, memberId := range memberIds {
+		eg.Go(handler(i, memberId))
+	}
+	if err = eg.Wait(); err != nil {
+		return nil, err
+	}
 	return OK(result), nil
 }
 
@@ -283,17 +259,24 @@ func Default() *APIServer {
 func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
 	ticker := time.NewTicker(loopInterval)
 	defer ticker.Stop()
+	var login bool
 	for {
 		<-ticker.C
 		ok, err := server.client.CheckLogin(context.Background())
 		if err != nil {
-			// 无法获取登录状态
-			// 没有启动或者退出登录
+			log.Error().Err(err).Msg("check login status")
 		}
 		log.Info().Bool("login", ok).Msg("check login")
 		if ok {
 			atomic.SwapInt32(&server.status, 1)
+			login = true
 		} else {
+			if login {
+				// 退出登录
+				login = false
+				server.stop(errors.New("logout"))
+				return
+			}
 			atomic.SwapInt32(&server.status, 0)
 		}
 	}

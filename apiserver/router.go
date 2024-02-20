@@ -17,9 +17,9 @@ func initEngine() *gin.Engine {
 // todo 修改掉这里
 func registerAPIServer(server *APIServer) http.Handler {
 	engine := initEngine()
-	engine.Use(func(context *gin.Context) {
-		context.Set("apiserver", server)
-	})
+	engine.Use(func(context *gin.Context) { context.Set("apiserver", server) })
+
+	engine.Use(func(context *gin.Context) { context.Request = context.Request.WithContext(server.ctx) })
 
 	engine.GET(CheckLogin, func(context *gin.Context) {
 		result, err := server.CheckLogin(context, struct{}{})
