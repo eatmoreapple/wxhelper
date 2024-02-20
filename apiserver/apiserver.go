@@ -246,7 +246,13 @@ func (a *APIServer) startListen() error {
 			_ = a.msgBuffer.Put(context.TODO(), message)
 		}
 		// 避免阻塞
-		go func() { _ = msgListener.ListenAndServe(handler) }()
+		go func() {
+			if err = msgListener.ListenAndServe(handler); err != nil {
+				// 当 msgListener 停止之后 APIServer 也随之停止
+				log.Error().Err(err).Msg("listen and serve message failed")
+				a.stop(err)
+			}
+		}()
 	}
 
 	// 尝试去注册消息回调
