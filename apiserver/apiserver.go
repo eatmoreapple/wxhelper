@@ -23,6 +23,8 @@ import (
 	"time"
 )
 
+var ErrLogout = errors.New("logout")
+
 type SendImageRequest struct {
 	To          string `json:"to"`
 	Image       string `json:"image"`
@@ -85,6 +87,19 @@ type APIServer struct {
 	status    int32
 	ctx       context.Context
 	stop      context.CancelCauseFunc
+}
+
+func (a *APIServer) IsLogin() bool {
+	return atomic.LoadInt32(&a.status) == 1
+}
+
+func (a *APIServer) logout() {
+	atomic.StoreInt32(&a.status, 0)
+	a.stop(ErrLogout)
+}
+
+func (a *APIServer) login() {
+	atomic.StoreInt32(&a.status, 1)
 }
 
 func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
@@ -245,9 +260,12 @@ func (a *APIServer) Run(addr string) error {
 }
 
 func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
+	ctx, cancel := context.WithCancelCause(context.Background())
 	srv := &APIServer{
 		client:    client,
 		msgBuffer: msgBuffer,
+		ctx:       ctx,
+		stop:      cancel,
 	}
 	return srv
 }
@@ -259,25 +277,20 @@ func Default() *APIServer {
 func loginStatusCheck(server *APIServer, loopInterval time.Duration) {
 	ticker := time.NewTicker(loopInterval)
 	defer ticker.Stop()
-	var login bool
 	for {
 		<-ticker.C
 		ok, err := server.client.CheckLogin(context.Background())
 		if err != nil {
-			log.Error().Err(err).Msg("check login status")
+			log.Error().Err(err).Msg("check IsLogin status")
 		}
-		log.Info().Bool("login", ok).Msg("check login")
+		log.Info().Bool("IsLogin", ok).Msg("check IsLogin")
 		if ok {
-			atomic.SwapInt32(&server.status, 1)
-			login = true
+			server.login()
 		} else {
-			if login {
-				// 退出登录
-				login = false
-				server.stop(errors.New("logout"))
+			if server.IsLogin() {
+				server.logout()
 				return
 			}
-			atomic.SwapInt32(&server.status, 0)
 		}
 	}
 }

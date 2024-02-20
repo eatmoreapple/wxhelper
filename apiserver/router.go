@@ -1,11 +1,12 @@
 package apiserver
 
 import (
+	stdcontext "context"
 	"github.com/eatmoreapple/ginx"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/net/context"
 	"net/http"
-	"sync/atomic"
 )
 
 func initEngine() *gin.Engine {
@@ -14,12 +15,40 @@ func initEngine() *gin.Engine {
 	return engine
 }
 
-// todo 修改掉这里
+// activeRequired 要求用户登录后没有退出
+func activeRequired(ctx context.Context) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		select {
+		case <-ctx.Done():
+			err := stdcontext.Cause(ctx)
+			if err == nil {
+				err = ctx.Err()
+			}
+			c.AbortWithStatusJSON(http.StatusUnauthorized, Result[any]{Code: resultCodeAuthErr, Msg: err.Error()})
+		default:
+			c.Request = c.Request.WithContext(ctx)
+			c.Next()
+		}
+	}
+}
+
+// loginRequired 要求用户登录
+func loginRequired(authFunc func() bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !authFunc() {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, Result[any]{Code: resultCodeAuthErr, Msg: "not login"})
+			return
+		}
+		c.Next()
+	}
+}
+
 func registerAPIServer(server *APIServer) http.Handler {
 	engine := initEngine()
-	engine.Use(func(context *gin.Context) { context.Set("apiserver", server) })
 
-	engine.Use(func(context *gin.Context) { context.Request = context.Request.WithContext(server.ctx) })
+	engine.Use(activeRequired(server.ctx))
+
+	engine.Use(loginRequired(server.IsLogin))
 
 	engine.GET(CheckLogin, func(context *gin.Context) {
 		result, err := server.CheckLogin(context, struct{}{})
@@ -30,14 +59,6 @@ func registerAPIServer(server *APIServer) http.Handler {
 		}
 	})
 	{
-		engine.Use(func(context *gin.Context) {
-			apiserver := context.MustGet("apiserver").(*APIServer)
-			if atomic.LoadInt32(&apiserver.status) != 1 {
-				context.AbortWithStatusJSON(401, Result[any]{Code: resultCodeAuthErr, Msg: "not login"})
-				return
-			}
-			context.Next()
-		})
 		router := ginx.NewRouter(engine)
 		router.GET(GetUserInfo, ginx.G(server.GetUserInfo).JSON())
 		router.GET(GetContactList, ginx.G(server.GetContactList).JSON())

@@ -1,7 +1,7 @@
 package apiserver
 
 const (
-	CheckLogin            = "/api/check-login"
+	CheckLogin            = "/api/check-IsLogin"
 	GetUserInfo           = "/api/userinfo"
 	SendText              = "/api/send-text"
 	GetContactList        = "/api/contact-list"
