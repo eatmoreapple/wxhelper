@@ -25,6 +25,12 @@ import (
 
 var ErrLogout = errors.New("logout")
 
+type EmptyRequest struct{}
+
+func (*EmptyRequest) FromContext(_ *gin.Context) error {
+	return nil
+}
+
 type SendImageRequest struct {
 	To          string `json:"to"`
 	Image       string `json:"image"`
@@ -107,7 +113,7 @@ func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
 }
 
 // CheckLogin 检查是否登录
-func (a *APIServer) CheckLogin(ctx context.Context, _ struct{}) (*Result[bool], error) {
+func (a *APIServer) CheckLogin(ctx context.Context, _ EmptyRequest) (*Result[bool], error) {
 	ok, err := a.client.CheckLogin(ctx)
 	if err != nil {
 		return nil, err
@@ -116,7 +122,7 @@ func (a *APIServer) CheckLogin(ctx context.Context, _ struct{}) (*Result[bool], 
 }
 
 // GetUserInfo 获取用户信息
-func (a *APIServer) GetUserInfo(ctx context.Context, _ struct{}) (*Result[*Account], error) {
+func (a *APIServer) GetUserInfo(ctx context.Context, _ EmptyRequest) (*Result[*Account], error) {
 	account, err := a.client.GetUserInfo(ctx)
 	if err != nil {
 		return nil, err
@@ -150,7 +156,7 @@ func (a *APIServer) SendFile(ctx context.Context, req SendFileRequest) (*Result[
 }
 
 // GetContactList 获取联系人列表
-func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Members], error) {
+func (a *APIServer) GetContactList(ctx context.Context, _ EmptyRequest) (*Result[Members], error) {
 	members, err := a.client.GetContactList(ctx)
 	if err != nil {
 		return nil, err
@@ -159,7 +165,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ struct{}) (*Result[Mem
 }
 
 // SyncMessage 同步消息
-func (a *APIServer) SyncMessage(ctx context.Context, _ struct{}) (*Result[[]*Message], error) {
+func (a *APIServer) SyncMessage(ctx context.Context, _ EmptyRequest) (*Result[[]*Message], error) {
 	log.Ctx(ctx).Info().Msg("receive sync message request")
 	messages := make([]*Message, 0)
 

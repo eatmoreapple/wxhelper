@@ -50,16 +50,9 @@ func registerAPIServer(server *APIServer) http.Handler {
 
 	engine.Use(loginRequired(server.IsLogin))
 
-	engine.GET(CheckLogin, func(context *gin.Context) {
-		result, err := server.CheckLogin(context, struct{}{})
-		if err != nil {
-			context.JSON(http.StatusOK, Err[any](err.Error()))
-		} else {
-			context.JSON(http.StatusOK, result)
-		}
-	})
 	{
 		router := ginx.NewRouter(engine)
+		router.GET(CheckLogin, ginx.G(server.CheckLogin).JSON())
 		router.GET(GetUserInfo, ginx.G(server.GetUserInfo).JSON())
 		router.GET(GetContactList, ginx.G(server.GetContactList).JSON())
 		router.GET(SyncMessage, ginx.G(server.SyncMessage).JSON())
