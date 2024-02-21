@@ -46,13 +46,21 @@ func loginRequired(authFunc func() bool) gin.HandlerFunc {
 func registerAPIServer(server *APIServer) http.Handler {
 	engine := initEngine()
 
+	router := ginx.NewRouter(engine)
+
 	engine.Use(activeRequired(server.ctx))
+
+	checkLogin := ginx.G(server.CheckLogin).JSON()
+
+	engine.GET(CheckLogin, func(c *gin.Context) {
+		if err := checkLogin(c); err != nil {
+			router.ErrorHandler(c, err)
+		}
+	})
 
 	engine.Use(loginRequired(server.IsLogin))
 
 	{
-		router := ginx.NewRouter(engine)
-		router.GET(CheckLogin, ginx.G(server.CheckLogin).JSON())
 		router.GET(GetUserInfo, ginx.G(server.GetUserInfo).JSON())
 		router.GET(GetContactList, ginx.G(server.GetContactList).JSON())
 		router.GET(SyncMessage, ginx.G(server.SyncMessage).JSON())
