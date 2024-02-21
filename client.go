@@ -84,3 +84,7 @@ func (c *Client) AddMemberIntoChatRoom(ctx context.Context, chatRoomID string, m
 func (c *Client) InviteMemberToChatRoom(ctx context.Context, chatRoomID string, memberIDs []string) error {
 	return c.apiclient.InviteMemberToChatRoom(ctx, chatRoomID, memberIDs)
 }
+
+func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
+	return c.apiclient.ForwardMsg(ctx, wxID, msgID)
+}

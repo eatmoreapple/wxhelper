@@ -91,6 +91,11 @@ type InviteMemberToChatRoomRequest struct {
 	MemberIds  []string `json:"memberIds"`
 }
 
+type ForwardMsgRequest struct {
+	WxID  string `json:"wxid"`
+	MsgID string `json:"msgId"`
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
@@ -255,6 +260,14 @@ func (a *APIServer) AddMemberToChatRoom(ctx context.Context, req AddMemberToChat
 
 func (a *APIServer) InviteMemberToChatRoom(ctx context.Context, req InviteMemberToChatRoomRequest) (*Result[any], error) {
 	err := a.client.InviteMemberToChatRoom(ctx, req.ChatRoomID, req.MemberIds)
+	if err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
+}
+
+func (a *APIServer) ForwardMsg(ctx context.Context, req ForwardMsgRequest) (*Result[any], error) {
+	err := a.client.ForwardMsg(ctx, req.WxID, req.MsgID)
 	if err != nil {
 		return nil, err
 	}

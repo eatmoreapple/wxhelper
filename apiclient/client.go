@@ -197,6 +197,19 @@ func (c *Client) InviteMemberToChatRoom(ctx context.Context, chatRoomID string, 
 	return r.Err()
 }
 
+func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
+	resp, err := c.transport.ForwardMsg(ctx, wxID, msgID)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	return r.Err()
+}
+
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{

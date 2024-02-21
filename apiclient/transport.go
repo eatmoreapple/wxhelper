@@ -234,3 +234,24 @@ func (c *Transport) InviteMemberToChatRoom(ctx context.Context, chatRoomID strin
 	req.Header.Add("Content-Type", "application/json")
 	return c.httpClient.Do(req)
 }
+
+func (c *Transport) ForwardMsg(ctx context.Context, wxID, msgID string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.ForwardMsg)
+	if err != nil {
+		return nil, err
+	}
+	var payload = apiserver.ForwardMsgRequest{
+		WxID:  wxID,
+		MsgID: msgID,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}

@@ -285,6 +285,22 @@ func (c *Client) InviteMemberToChatRoom(ctx context.Context, chatRoomID string, 
 	return nil
 }
 
+func (c *Client) ForwardMsg(ctx context.Context, msgID, wxID string) error {
+	resp, err := c.transport.ForwardMsg(ctx, msgID, wxID)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	if r.Code != 1 {
+		return errors.New("forward msg failed")
+	}
+	return nil
+}
+
 func New(transport *Transport) *Client {
 	return &Client{transport: transport}
 }

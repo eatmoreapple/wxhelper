@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
 )
 
 type Account struct {
@@ -106,4 +107,8 @@ func (a *Account) AddMemberIntoChatRoom(group *Group, users ...*Friend) error {
 	} else {
 		return a.bot.client.AddMemberIntoChatRoom(a.bot.Context(), group.User.Wxid, wxIds)
 	}
+}
+
+func (a *Account) ForwardMessage(msg *Message, user *User) error {
+	return a.bot.client.ForwardMsg(a.bot.Context(), user.Wxid, strconv.FormatInt(msg.MsgId, 10))
 }

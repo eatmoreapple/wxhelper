@@ -13,4 +13,5 @@ const (
 	SendAtText             = "/api/send-at-text"
 	AddMemberToChatRoom    = "/api/add-member-into-chatroom"
 	InviteMemberToChatRoom = "/api/invite-member-into-chatroom"
+	ForwardMsg             = "/api/forward-msg"
 )

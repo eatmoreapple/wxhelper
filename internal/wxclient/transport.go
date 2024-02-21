@@ -324,6 +324,26 @@ func (c *Transport) InviteMemberToChatRoom(ctx context.Context, chatRoomId strin
 	return http.DefaultClient.Do(req)
 }
 
+func (c *Transport) ForwardMsg(ctx context.Context, msgID, wxID string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.BaseURL + "/api/forwardMsg")
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"wxid":  wxID,
+		"msgId": msgID,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
 func NewTransport(baseURL string) *Transport {
 	return &Transport{BaseURL: baseURL}
 }
