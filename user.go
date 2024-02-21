@@ -180,6 +180,11 @@ func (g *Group) SendAtALLTextMsg(content string) error {
 	return g.SendAtText(content, "notify@all")
 }
 
+// AddMemberIntoChatRoom 拉好友进群
+func (g *Group) AddMemberIntoChatRoom(friends ...*Friend) error {
+	return g.Owner().AddMemberIntoChatRoom(g, friends...)
+}
+
 type GroupInfo struct {
 	ChatRoomID string
 	Notice     string

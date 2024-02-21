@@ -11,4 +11,5 @@ const (
 	GetChatRoomDetail     = "/api/chat-room-detail"
 	GetMemberFromChatRoom = "/api/member-from-chat-room"
 	SendAtText            = "/api/send-at-text"
+	AddMemberToChatRoom   = "/api/addMemberToChatRoom"
 )

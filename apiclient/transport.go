@@ -192,3 +192,24 @@ func (c *Transport) SendAtText(ctx context.Context, option SendAtTextOption) (*h
 	req.Header.Add("Content-Type", "application/json")
 	return c.httpClient.Do(req)
 }
+
+func (c *Transport) AddMemberIntoChatRoom(ctx context.Context, chatRoomID string, memberIDs []string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.AddMemberToChatRoom)
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]interface{}{
+		"chatRoomID": chatRoomID,
+		"memberIds":  memberIDs,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}

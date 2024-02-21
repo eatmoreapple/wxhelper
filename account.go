@@ -2,6 +2,7 @@ package wxhelper
 
 import (
 	"context"
+	"errors"
 	"io"
 )
 
@@ -85,4 +86,15 @@ func (a *Account) SendImageToGroup(group *Group, img io.Reader) error {
 
 func (a *Account) SendFileToGroup(group *Group, file io.Reader) error {
 	return a.sendFile(group.User.Wxid, file)
+}
+
+func (a *Account) AddMemberIntoChatRoom(group *Group, users ...*Friend) error {
+	if len(users) == 0 {
+		return errors.New("no user to add")
+	}
+	var wxIds = make([]string, 0, len(users))
+	for _, user := range users {
+		wxIds = append(wxIds, user.Wxid)
+	}
+	return a.bot.client.AddMemberIntoChatRoom(a.bot.Context(), group.User.Wxid, wxIds)
 }
