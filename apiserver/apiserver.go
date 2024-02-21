@@ -51,7 +51,7 @@ func (a *SendImageRequest) FromContext(ctx *gin.Context) error {
 
 type SendFileRequest struct {
 	To         string `json:"to"`
-	Image      string `json:"file"`
+	File       string `json:"file"`
 	fileReader io.Reader
 }
 
@@ -59,7 +59,7 @@ func (a *SendFileRequest) FromContext(ctx *gin.Context) error {
 	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
 		return err
 	}
-	data, err := base64.StdEncoding.DecodeString(a.Image)
+	data, err := base64.StdEncoding.DecodeString(a.File)
 	if err != nil {
 		return err
 	}

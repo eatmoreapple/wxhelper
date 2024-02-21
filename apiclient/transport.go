@@ -59,9 +59,9 @@ func (c *Transport) SendText(ctx context.Context, to, content string) (*http.Res
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]string{
-		"to":      to,
-		"content": content,
+	var payload = apiserver.SendTextRequest{
+		To:      to,
+		Content: content,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -80,9 +80,9 @@ func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Re
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]string{
-		"to":    to,
-		"image": imgData,
+	var payload = apiserver.SendImageRequest{
+		To:    to,
+		Image: imgData,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -101,9 +101,9 @@ func (c *Transport) SendFile(ctx context.Context, to, fileData string) (*http.Re
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]string{
-		"to":   to,
-		"file": fileData,
+	var payload = apiserver.SendFileRequest{
+		To:   to,
+		File: fileData,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -135,8 +135,8 @@ func (c *Transport) GetChatRoomDetail(ctx context.Context, chatRoomID string) (*
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]string{
-		"chatRoomID": chatRoomID,
+	var payload = apiserver.GetChatRoomInfoRequest{
+		ChatRoomID: chatRoomID,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -155,8 +155,8 @@ func (c *Transport) GetMemberFromChatRoom(ctx context.Context, chatRoomID string
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]string{
-		"chatRoomID": chatRoomID,
+	var payload = apiserver.GetMemberFromChatRoomRequest{
+		ChatRoomID: chatRoomID,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -171,9 +171,9 @@ func (c *Transport) GetMemberFromChatRoom(ctx context.Context, chatRoomID string
 }
 
 type SendAtTextOption struct {
-	GroupID string   `json:"groupId"`
-	AtList  []string `json:"atList"`
-	Content string   `json:"content"`
+	GroupID string
+	Content string
+	AtList  []string
 }
 
 func (c *Transport) SendAtText(ctx context.Context, option SendAtTextOption) (*http.Response, error) {
@@ -181,7 +181,12 @@ func (c *Transport) SendAtText(ctx context.Context, option SendAtTextOption) (*h
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.Marshal(option)
+	var payload = apiserver.SendAtTextRequest{
+		GroupID: option.GroupID,
+		AtList:  option.AtList,
+		Content: option.Content,
+	}
+	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -198,9 +203,9 @@ func (c *Transport) AddMemberIntoChatRoom(ctx context.Context, chatRoomID string
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]interface{}{
-		"chatRoomID": chatRoomID,
-		"memberIds":  memberIDs,
+	var payload = apiserver.AddMemberToChatRoomRequest{
+		ChatRoomID: chatRoomID,
+		MemberIds:  memberIDs,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -219,9 +224,9 @@ func (c *Transport) InviteMemberToChatRoom(ctx context.Context, chatRoomID strin
 	if err != nil {
 		return nil, err
 	}
-	var payload = map[string]interface{}{
-		"chatRoomID": chatRoomID,
-		"memberIds":  memberIDs,
+	var payload = apiserver.InviteMemberToChatRoomRequest{
+		ChatRoomID: chatRoomID,
+		MemberIds:  memberIDs,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
