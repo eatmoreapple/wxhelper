@@ -20,7 +20,7 @@ services:
       - virtualmachine
       - redis
     volumes:
-      - ./data/wechat:/app/data
+      - ./data/data:/app/data
 
   virtualmachine:
     image: lxh01/wxhelper-docker:3.9.5.81-v11
@@ -33,7 +33,8 @@ services:
     environment:
       - WINEDEBUG=fixme-all
     volumes:
-      - ./data/wechat:/home/app/.wine/drive_c/data
+      - ./data/data:/home/app/.wine/drive_c/data
+      - ./data/wechat:/home/app/.wine/drive_c/users/app/Documents/WeChat\ Files
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:19088/api/checkLogin" ]
       interval: 30s
