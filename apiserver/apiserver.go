@@ -251,11 +251,11 @@ func (a *APIServer) startListen() error {
 		}
 		// 避免阻塞
 		go func() {
-			if err = msgListener.ListenAndServe(handler); err != nil {
-				// 当 msgListener 停止之后 APIServer 也随之停止
-				log.Error().Err(err).Msg("listen and serve message failed")
-				a.stop(err)
-			}
+			var stopReason error
+			// 当 msgListener 停止之后 APIServer 也随之停止
+			defer a.stop(stopReason)
+			stopReason = msgListener.ListenAndServe(handler)
+			log.Error().Err(stopReason).Msg("listen and serve message failed")
 		}()
 	}
 
