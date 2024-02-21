@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/eatmoreapple/env"
+	"github.com/eatmoreapple/ginx"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
@@ -24,12 +25,6 @@ import (
 )
 
 var ErrLogout = errors.New("logout")
-
-type EmptyRequest struct{}
-
-func (*EmptyRequest) FromContext(_ *gin.Context) error {
-	return nil
-}
 
 type SendImageRequest struct {
 	To          string `json:"to"`
@@ -109,12 +104,12 @@ func (a *APIServer) login() {
 	atomic.StoreInt32(&a.status, 1)
 }
 
-func (a *APIServer) Ping(_ context.Context, _ struct{}) (string, error) {
+func (a *APIServer) Ping(_ context.Context, _ ginx.Empty) (string, error) {
 	return "pong", nil
 }
 
 // CheckLogin 检查是否登录
-func (a *APIServer) CheckLogin(ctx context.Context, _ EmptyRequest) (*Result[bool], error) {
+func (a *APIServer) CheckLogin(ctx context.Context, _ ginx.Empty) (*Result[bool], error) {
 	ok, err := a.client.CheckLogin(ctx)
 	if err != nil {
 		return nil, err
@@ -123,7 +118,7 @@ func (a *APIServer) CheckLogin(ctx context.Context, _ EmptyRequest) (*Result[boo
 }
 
 // GetUserInfo 获取用户信息
-func (a *APIServer) GetUserInfo(ctx context.Context, _ EmptyRequest) (*Result[*Account], error) {
+func (a *APIServer) GetUserInfo(ctx context.Context, _ ginx.Empty) (*Result[*Account], error) {
 	account, err := a.client.GetUserInfo(ctx)
 	if err != nil {
 		return nil, err
@@ -157,7 +152,7 @@ func (a *APIServer) SendFile(ctx context.Context, req SendFileRequest) (*Result[
 }
 
 // GetContactList 获取联系人列表
-func (a *APIServer) GetContactList(ctx context.Context, _ EmptyRequest) (*Result[Members], error) {
+func (a *APIServer) GetContactList(ctx context.Context, _ ginx.Empty) (*Result[Members], error) {
 	members, err := a.client.GetContactList(ctx)
 	if err != nil {
 		return nil, err
@@ -166,7 +161,7 @@ func (a *APIServer) GetContactList(ctx context.Context, _ EmptyRequest) (*Result
 }
 
 // SyncMessage 同步消息
-func (a *APIServer) SyncMessage(ctx context.Context, _ EmptyRequest) (*Result[[]*Message], error) {
+func (a *APIServer) SyncMessage(ctx context.Context, _ ginx.Empty) (*Result[[]*Message], error) {
 	log.Ctx(ctx).Info().Msg("receive sync message request")
 	messages := make([]*Message, 0)
 
