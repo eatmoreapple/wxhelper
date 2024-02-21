@@ -92,9 +92,18 @@ func (a *Account) AddMemberIntoChatRoom(group *Group, users ...*Friend) error {
 	if len(users) == 0 {
 		return errors.New("no user to add")
 	}
+	// 判断群聊人数有没有超过40人
+	members, err := group.Members()
+	if err != nil {
+		return err
+	}
 	var wxIds = make([]string, 0, len(users))
 	for _, user := range users {
 		wxIds = append(wxIds, user.Wxid)
 	}
-	return a.bot.client.AddMemberIntoChatRoom(a.bot.Context(), group.User.Wxid, wxIds)
+	if len(members) > 40 {
+		return a.bot.client.InviteMemberToChatRoom(a.bot.Context(), group.User.Wxid, wxIds)
+	} else {
+		return a.bot.client.AddMemberIntoChatRoom(a.bot.Context(), group.User.Wxid, wxIds)
+	}
 }

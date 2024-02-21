@@ -269,6 +269,22 @@ func (c *Client) AddMemberIntoChatRoom(ctx context.Context, chatRoomID string, m
 	return nil
 }
 
+func (c *Client) InviteMemberToChatRoom(ctx context.Context, chatRoomID string, memberIDs []string) error {
+	resp, err := c.transport.InviteMemberToChatRoom(ctx, chatRoomID, strings.Join(memberIDs, ","))
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	if r.Code != 1 {
+		return errors.New("invite member into chat room failed")
+	}
+	return nil
+}
+
 func New(transport *Transport) *Client {
 	return &Client{transport: transport}
 }

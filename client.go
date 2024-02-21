@@ -80,3 +80,7 @@ func (c *Client) SendAtText(ctx context.Context, option apiclient.SendAtTextOpti
 func (c *Client) AddMemberIntoChatRoom(ctx context.Context, chatRoomID string, memberIDs []string) error {
 	return c.apiclient.AddMemberIntoChatRoom(ctx, chatRoomID, memberIDs)
 }
+
+func (c *Client) InviteMemberToChatRoom(ctx context.Context, chatRoomID string, memberIDs []string) error {
+	return c.apiclient.InviteMemberToChatRoom(ctx, chatRoomID, memberIDs)
+}

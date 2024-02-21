@@ -304,6 +304,26 @@ func (c *Transport) AddMemberIntoChatRoom(ctx context.Context, chatRoomId string
 	return http.DefaultClient.Do(req)
 }
 
+func (c *Transport) InviteMemberToChatRoom(ctx context.Context, chatRoomId string, memberIds string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.BaseURL + "/api/InviteMemberToChatRoom")
+	if err != nil {
+		return nil, err
+	}
+	var payload = map[string]string{
+		"chatRoomId": chatRoomId,
+		"memberIds":  memberIds,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
 func NewTransport(baseURL string) *Transport {
 	return &Transport{BaseURL: baseURL}
 }

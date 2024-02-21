@@ -86,6 +86,11 @@ type AddMemberToChatRoomRequest struct {
 	MemberIds  []string `json:"memberIds"`
 }
 
+type InviteMemberToChatRoomRequest struct {
+	ChatRoomID string   `json:"chatRoomId"`
+	MemberIds  []string `json:"memberIds"`
+}
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client    *wxclient.Client
@@ -242,6 +247,14 @@ func (a *APIServer) SendAtText(ctx context.Context, req SendAtTextRequest) (*Res
 
 func (a *APIServer) AddMemberToChatRoom(ctx context.Context, req AddMemberToChatRoomRequest) (*Result[any], error) {
 	err := a.client.AddMemberIntoChatRoom(ctx, req.ChatRoomID, req.MemberIds)
+	if err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
+}
+
+func (a *APIServer) InviteMemberToChatRoom(ctx context.Context, req InviteMemberToChatRoomRequest) (*Result[any], error) {
+	err := a.client.InviteMemberToChatRoom(ctx, req.ChatRoomID, req.MemberIds)
 	if err != nil {
 		return nil, err
 	}
