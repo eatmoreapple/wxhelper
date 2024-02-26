@@ -11,7 +11,6 @@ import (
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
-	"github.com/eatmoreapple/wxhelper/pkg/netutil"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -275,13 +274,7 @@ func (a *APIServer) ForwardMsg(ctx context.Context, req ForwardMsgRequest) (*Res
 }
 
 func (a *APIServer) startListen() error {
-	// fixme: wine中无法根据service name进行dns解析，所以需要获取apiserver的ip
-	addr, err := netutil.GetHostIP()
-	if err != nil {
-		return err
-	}
 	port := env.Name("MSG_LISTENER_PORT").IntOrElse(9999)
-
 	{
 		msgListener := &TCPMessageListener{Addr: ":" + strconv.Itoa(port)}
 		// 定义消息处理行为，将获取到的消息塞进队列中
@@ -297,9 +290,9 @@ func (a *APIServer) startListen() error {
 			log.Error().Err(stopReason).Msg("listen and serve message failed")
 		}()
 	}
-
 	// 尝试去注册消息回调
-	return a.client.HookSyncMsg(context.Background(), addr, port)
+	// 已经在一个容器内了，直接用localhost
+	return a.client.HookSyncMsg(context.Background(), "localhost", port)
 }
 
 func (a *APIServer) Run(addr string) error {
