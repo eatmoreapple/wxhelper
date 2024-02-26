@@ -306,6 +306,7 @@ func New(transport *Transport) *Client {
 }
 
 func Default() *Client {
-	transport := NewTransport(env.Name("VIRTUAL_MACHINE_URL").String())
+	var injectServerURL = env.Name("INJECT_SERVER_URL").StringOrElse("http://localhost:19088")
+	transport := NewTransport(injectServerURL)
 	return New(transport)
 }
