@@ -1,10 +1,13 @@
 package wxhelper
 
 import (
+	"errors"
 	"github.com/eatmoreapple/wxhelper/apiclient"
 	"io"
 	"strings"
 )
+
+var ErrNoSuchUserFound = errors.New("no such user found")
 
 type empty struct{}
 

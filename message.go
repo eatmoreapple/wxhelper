@@ -81,4 +81,16 @@ func (m Message) Forward(u *User) error {
 	return m.Owner().ForwardMessage(&m, u)
 }
 
+func (m Message) Sender() (*User, error) {
+	members, err := m.Owner().bot.client.GetContactList(m.Owner().bot.Context())
+	if err != nil {
+		return nil, err
+	}
+	result := members.Search(1, func(user *User) bool { return user.Wxid == m.FromUser })
+	if len(result) == 0 {
+		return nil, ErrNoSuchUserFound
+	}
+	return result[0], nil
+}
+
 type MessageHandler func(msg *Message)
