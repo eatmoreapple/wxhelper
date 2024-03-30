@@ -1,11 +1,10 @@
 package apiserver
 
 import (
-	stdcontext "context"
+	"context"
 	"github.com/eatmoreapple/ginx"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/net/context"
 	"net/http"
 )
 
@@ -20,7 +19,7 @@ func activeRequired(ctx context.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		select {
 		case <-ctx.Done():
-			err := stdcontext.Cause(ctx)
+			err := context.Cause(ctx)
 			if err == nil {
 				err = ctx.Err()
 			}
