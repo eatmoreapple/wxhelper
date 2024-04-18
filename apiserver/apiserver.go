@@ -296,7 +296,7 @@ func (a *APIServer) UploadFile(ctx context.Context, req UploadRequest) (*Result[
 	// if it is the last chunk, merge the file
 	if req.Chunk+1 == req.Chunks {
 		// merge the file
-		filename, err = fileMerger.Merge()
+		filename, err = fileMerger.Merge(ctx)
 		if err != nil {
 			return nil, err
 		}
