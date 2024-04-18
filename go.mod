@@ -7,6 +7,7 @@ require (
 	github.com/eatmoreapple/ginx v0.0.0-20240228130012-0081381b9170
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.32.0
 	golang.org/x/sync v0.6.0
 )

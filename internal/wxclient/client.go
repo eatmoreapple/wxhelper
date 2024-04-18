@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/eatmoreapple/env"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
-	"io"
 	"net/url"
 	"strconv"
 	"strings"
@@ -142,8 +141,8 @@ func (c *Client) UnhookSyncMsg(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error {
-	filename, err := saveToLocal(img)
+func (c *Client) SendImage(ctx context.Context, to string, img string) error {
+	filename, err := convertToWindows(img)
 	if err != nil {
 		return err
 	}
@@ -159,8 +158,8 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 	return nil
 }
 
-func (c *Client) SendFile(ctx context.Context, to string, img io.Reader) error {
-	filename, err := saveToLocal(img)
+func (c *Client) SendFile(ctx context.Context, to string, file string) error {
+	filename, err := convertToWindows(file)
 	if err != nil {
 		return err
 	}
