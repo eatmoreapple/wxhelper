@@ -3,11 +3,11 @@ package apiclient
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"github.com/eatmoreapple/wxhelper/apiserver"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"os"
@@ -79,14 +79,11 @@ func (c *Client) SendText(ctx context.Context, to, content string) error {
 }
 
 func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error {
-	// to base64
-	data, err := io.ReadAll(img)
+	path, err := c.UploadFile(ctx, "", img)
 	if err != nil {
 		return err
 	}
-	encoded := base64.StdEncoding.EncodeToString(data)
-
-	resp, err := c.transport.SendImage(ctx, to, encoded)
+	resp, err := c.transport.SendImage(ctx, to, path)
 	if err != nil {
 		return err
 	}
@@ -99,13 +96,11 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 }
 
 func (c *Client) SendFile(ctx context.Context, to string, file io.Reader) error {
-	data, err := io.ReadAll(file)
+	path, err := c.UploadFile(ctx, "", file)
 	if err != nil {
 		return err
 	}
-	encoded := base64.StdEncoding.EncodeToString(data)
-
-	resp, err := c.transport.SendFile(ctx, to, encoded)
+	resp, err := c.transport.SendFile(ctx, to, path)
 	if err != nil {
 		return err
 	}
@@ -215,6 +210,13 @@ func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
 }
 
 func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Reader) (string, error) {
+	if len(filename) == 0 {
+		if f, ok := reader.(*os.File); ok {
+			filename = f.Name()
+		} else {
+			filename = uuid.New().String()
+		}
+	}
 	tmpFile, err := os.CreateTemp("", "*")
 	if err != nil {
 		return "", err

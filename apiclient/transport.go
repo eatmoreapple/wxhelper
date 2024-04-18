@@ -78,14 +78,14 @@ func (c *Transport) SendText(ctx context.Context, to, content string) (*http.Res
 	return c.httpClient.Do(req)
 }
 
-func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Response, error) {
+func (c *Transport) SendImage(ctx context.Context, to, filename string) (*http.Response, error) {
 	url, err := urlpkg.Parse(c.baseURL + apiserver.SendImage)
 	if err != nil {
 		return nil, err
 	}
 	var payload = apiserver.SendImageRequest{
 		To:    to,
-		Image: imgData,
+		Image: filename,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -99,14 +99,14 @@ func (c *Transport) SendImage(ctx context.Context, to, imgData string) (*http.Re
 	return c.httpClient.Do(req)
 }
 
-func (c *Transport) SendFile(ctx context.Context, to, fileData string) (*http.Response, error) {
+func (c *Transport) SendFile(ctx context.Context, to, file string) (*http.Response, error) {
 	url, err := urlpkg.Parse(c.baseURL + apiserver.SendFile)
 	if err != nil {
 		return nil, err
 	}
 	var payload = apiserver.SendFileRequest{
 		To:   to,
-		File: fileData,
+		File: file,
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {

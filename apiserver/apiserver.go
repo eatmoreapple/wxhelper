@@ -1,10 +1,7 @@
 package apiserver
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/ginx"
@@ -28,9 +25,8 @@ import (
 var ErrLogout = errors.New("logout")
 
 type SendImageRequest struct {
-	To          string `json:"to"`
-	Image       string `json:"image"`
-	imageReader io.Reader
+	To    string `json:"to"`
+	Image string `json:"image"`
 }
 
 type SendTextRequest struct {
@@ -38,34 +34,9 @@ type SendTextRequest struct {
 	Content string `json:"content"`
 }
 
-func (a *SendImageRequest) FromContext(ctx *gin.Context) error {
-	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
-		return err
-	}
-	data, err := base64.StdEncoding.DecodeString(a.Image)
-	if err != nil {
-		return err
-	}
-	a.imageReader = bytes.NewReader(data)
-	return nil
-}
-
 type SendFileRequest struct {
-	To         string `json:"to"`
-	File       string `json:"file"`
-	fileReader io.Reader
-}
-
-func (a *SendFileRequest) FromContext(ctx *gin.Context) error {
-	if err := json.NewDecoder(ctx.Request.Body).Decode(a); err != nil {
-		return err
-	}
-	data, err := base64.StdEncoding.DecodeString(a.File)
-	if err != nil {
-		return err
-	}
-	a.fileReader = bytes.NewReader(data)
-	return nil
+	To   string `json:"to"`
+	File string `json:"file"`
 }
 
 type GetChatRoomInfoRequest struct {
@@ -153,7 +124,7 @@ func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[
 }
 
 func (a *APIServer) SendImage(ctx context.Context, req SendImageRequest) (*Result[any], error) {
-	err := a.client.SendImage(ctx, req.To, req.imageReader)
+	err := a.client.SendImage(ctx, req.To, req.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +132,7 @@ func (a *APIServer) SendImage(ctx context.Context, req SendImageRequest) (*Resul
 }
 
 func (a *APIServer) SendFile(ctx context.Context, req SendFileRequest) (*Result[any], error) {
-	err := a.client.SendFile(ctx, req.To, req.fileReader)
+	err := a.client.SendFile(ctx, req.To, req.File)
 	if err != nil {
 		return nil, err
 	}
