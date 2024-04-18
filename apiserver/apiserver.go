@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/eatmoreapple/env"
 	"github.com/eatmoreapple/ginx"
+	"github.com/eatmoreapple/wxhelper/apiserver/internal/filemerger"
 	"github.com/eatmoreapple/wxhelper/apiserver/internal/msgbuffer"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
@@ -16,6 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -97,12 +99,13 @@ type ForwardMsgRequest struct {
 
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
-	client    *wxclient.Client
-	msgBuffer msgbuffer.MessageBuffer
-	status    int32
-	ctx       context.Context
-	stop      context.CancelCauseFunc
-	checker   Checker
+	client            *wxclient.Client
+	msgBuffer         msgbuffer.MessageBuffer
+	fileMergerFactory filemerger.Factory
+	status            int32
+	ctx               context.Context
+	stop              context.CancelCauseFunc
+	checker           Checker
 }
 
 func (a *APIServer) IsLogin() bool {
@@ -271,6 +274,63 @@ func (a *APIServer) ForwardMsg(ctx context.Context, req ForwardMsgRequest) (*Res
 		return nil, err
 	}
 	return OK[any](nil), nil
+}
+
+type UploadRequest struct {
+	Filename string        `form:"filename"`
+	FileHash string        `form:"fileHash"`
+	Chunks   int           `form:"chunks"`
+	Chunk    int           `form:"chunk"`
+	content  io.ReadCloser // 上传的文件
+}
+
+func (a *UploadRequest) FromContext(ctx *gin.Context) error {
+	if err := ctx.ShouldBind(a); err != nil {
+		return err
+	}
+	reader, _, err := ctx.Request.FormFile("file")
+	if err != nil {
+		return err
+	}
+	a.content = reader
+	return nil
+}
+
+func (a *APIServer) UploadFile(ctx context.Context, req UploadRequest) (*Result[string], error) {
+	// 保存上传的文件
+	// 保存到本地
+	file, err := os.CreateTemp("", "upload")
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = file.Close() }()
+
+	defer func() { _ = req.content.Close() }()
+
+	// save the file
+	if _, err = io.Copy(file, req.content); err != nil {
+		return nil, err
+	}
+	key := req.Filename + ":" + req.FileHash
+
+	fileMerger, err := a.fileMergerFactory.New(key)
+	if err != nil {
+		return nil, err
+	}
+	if err = fileMerger.Add(ctx, file.Name()); err != nil {
+		return nil, err
+	}
+	var filename string
+
+	// if it is the last chunk, merge the file
+	if req.Chunk+1 == req.Chunks {
+		// merge the file
+		filename, err = fileMerger.Merge()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return OK[string](filename), nil
 }
 
 func (a *APIServer) startListen() error {
