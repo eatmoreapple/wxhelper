@@ -26,16 +26,14 @@ func (m *MemoryMessageBuffer) Put(ctx context.Context, msg *Message) error {
 func (m *MemoryMessageBuffer) Get(ctx context.Context, timeout time.Duration) (*Message, error) {
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
-	for {
-		log.Info().Msg("get message from buffer")
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-timer.C:
-			return nil, ErrNoMessage
-		case msg := <-m.msgCH:
-			return msg, nil
-		}
+	log.Info().Msg("get message from buffer")
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-timer.C:
+		return nil, ErrNoMessage
+	case msg := <-m.msgCH:
+		return msg, nil
 	}
 }
 
