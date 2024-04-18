@@ -5,8 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/eatmoreapple/wxhelper/apiserver"
+	"io"
+	"mime/multipart"
 	"net/http"
 	urlpkg "net/url"
+	"strconv"
 )
 
 type Transport struct {
@@ -258,5 +261,44 @@ func (c *Transport) ForwardMsg(ctx context.Context, wxID, msgID string) (*http.R
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}
+
+func (c *Transport) UploadFile(ctx context.Context, request apiserver.UploadRequest) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.UploadFile)
+	if err != nil {
+		return nil, err
+	}
+	var buf = new(bytes.Buffer)
+
+	writer := multipart.NewWriter(buf)
+
+	part, err := writer.CreateFormFile("file", request.Filename)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = io.Copy(part, request.Content); err != nil {
+		return nil, err
+	}
+	if err = writer.WriteField("filename", request.Filename); err != nil {
+		return nil, err
+	}
+	if err = writer.WriteField("fileHash", request.FileHash); err != nil {
+		return nil, err
+	}
+	if err = writer.WriteField("chunks", strconv.Itoa(request.Chunks)); err != nil {
+		return nil, err
+	}
+	if err = writer.WriteField("chunk", strconv.Itoa(request.Chunk)); err != nil {
+		return nil, err
+	}
+	if err = writer.Close(); err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), buf)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
 	return c.httpClient.Do(req)
 }

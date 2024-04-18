@@ -281,7 +281,7 @@ type UploadRequest struct {
 	FileHash string        `form:"fileHash"`
 	Chunks   int           `form:"chunks"`
 	Chunk    int           `form:"chunk"`
-	content  io.ReadCloser // 上传的文件
+	Content  io.ReadCloser `form:"-"`
 }
 
 func (a *UploadRequest) FromContext(ctx *gin.Context) error {
@@ -292,7 +292,7 @@ func (a *UploadRequest) FromContext(ctx *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	a.content = reader
+	a.Content = reader
 	return nil
 }
 
@@ -305,10 +305,10 @@ func (a *APIServer) UploadFile(ctx context.Context, req UploadRequest) (*Result[
 	}
 	defer func() { _ = file.Close() }()
 
-	defer func() { _ = req.content.Close() }()
+	defer func() { _ = req.Content.Close() }()
 
 	// save the file
-	if _, err = io.Copy(file, req.content); err != nil {
+	if _, err = io.Copy(file, req.Content); err != nil {
 		return nil, err
 	}
 	key := req.Filename + ":" + req.FileHash
@@ -367,18 +367,19 @@ func (a *APIServer) Run(addr string) error {
 	return srv.ListenAndServe()
 }
 
-func New(client *wxclient.Client, msgBuffer msgbuffer.MessageBuffer) *APIServer {
+func New(client *wxclient.Client, fileMergerFactory filemerger.Factory, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	ctx, cancel := context.WithCancelCause(context.Background())
 	srv := &APIServer{
-		client:    client,
-		msgBuffer: msgBuffer,
-		ctx:       ctx,
-		stop:      cancel,
+		client:            client,
+		msgBuffer:         msgBuffer,
+		fileMergerFactory: fileMergerFactory,
+		ctx:               ctx,
+		stop:              cancel,
 	}
 	srv.checker = &loginChecker{srv: srv, loopInterval: time.Second / 5}
 	return srv
 }
 
 func Default() *APIServer {
-	return New(wxclient.Default(), msgbuffer.Default())
+	return New(wxclient.Default(), filemerger.DefaultFactory(), msgbuffer.Default())
 }

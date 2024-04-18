@@ -48,12 +48,14 @@ func (r *redisLocalFileMerger) Merge() (string, error) {
 	}
 	defer func() { _ = finalFile.Close() }()
 
+	writer := sha256.New()
+
 	// merge function is an inner function to merge files
 	merge := func(f io.Reader) error {
 		if closer, ok := f.(io.Closer); ok {
 			defer func() { _ = closer.Close() }()
 		}
-		_, err := io.Copy(finalFile, f)
+		_, err := io.Copy(finalFile, io.TeeReader(f, writer))
 		return err
 	}
 
@@ -68,16 +70,8 @@ func (r *redisLocalFileMerger) Merge() (string, error) {
 		}
 	}
 
-	// reset file offset
-	if _, err = finalFile.Seek(0, io.SeekStart); err != nil {
-		return "", err
-	}
 	// try to check file hash
 	// if hash is not equal to fileHash, return error
-	writer := sha256.New()
-	if _, err = io.Copy(writer, finalFile); err != nil {
-		return "", err
-	}
 	if hex.EncodeToString(writer.Sum(nil)) != r.fileHash {
 		return "", errors.New("hash not equal")
 	}
@@ -102,4 +96,16 @@ func (l *localFileMergerFactory) New(key string) (FileMerger, error) {
 	}
 	filename, fileHash := items[0], items[1]
 	return &redisLocalFileMerger{client: l.client, filename: filename, fileHash: fileHash}, nil
+}
+
+func DefaultFactory() Factory {
+	addr := env.Name("REDIS_ADDR").String()
+	if len(addr) == 0 {
+		panic("REDIS_ADDR is required")
+	}
+	return &localFileMergerFactory{client: redis.NewClient(&redis.Options{
+		Network:  "tcp",
+		Addr:     addr,
+		PoolSize: 10,
+	})}
 }
