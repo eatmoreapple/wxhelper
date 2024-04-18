@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 type Client struct {
@@ -212,7 +213,7 @@ func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
 func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Reader) (string, error) {
 	if len(filename) == 0 {
 		if f, ok := reader.(*os.File); ok {
-			filename = f.Name()
+			filename = filepath.Base(f.Name())
 		} else {
 			filename = uuid.New().String()
 		}
