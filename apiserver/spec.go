@@ -14,4 +14,5 @@ const (
 	AddMemberToChatRoom    = "/api/add-member-into-chatroom"
 	InviteMemberToChatRoom = "/api/invite-member-into-chatroom"
 	ForwardMsg             = "/api/forward-msg"
+	UploadFile             = "/api/upload-file"
 )

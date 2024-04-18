@@ -2,11 +2,15 @@ package apiclient
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"github.com/eatmoreapple/wxhelper/apiserver"
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"io"
 	"net/http"
+	"os"
 )
 
 type Client struct {
@@ -208,6 +212,60 @@ func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
 		return err
 	}
 	return r.Err()
+}
+
+func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Reader) (string, error) {
+	tmpFile, err := os.CreateTemp("", "*")
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = tmpFile.Close() }()
+
+	h := sha256.New()
+
+	if _, err = io.Copy(tmpFile, io.TeeReader(reader, h)); err != nil {
+		return "", err
+	}
+	fileHash := hex.EncodeToString(h.Sum(nil))
+
+	stat, err := tmpFile.Stat()
+	if err != nil {
+		return "", err
+	}
+
+	const chunkSize int64 = (1 << 20) / 2
+
+	chunks := (stat.Size() + chunkSize - 1) / chunkSize
+
+	// closure function to upload file
+	upload := func(chunk int, reader io.Reader) (string, error) {
+		resp, err := c.transport.UploadFile(ctx, apiserver.UploadRequest{
+			Filename: filename,
+			FileHash: fileHash,
+			Chunks:   int(chunks),
+			Chunk:    chunk,
+			Content:  io.NopCloser(reader),
+		})
+		if err != nil {
+			return "", err
+		}
+		defer func() { _ = resp.Body.Close() }()
+		var r Result[string]
+		if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+			return "", err
+		}
+		return r.Data, nil
+	}
+
+	var result string
+	for i := int64(0); i < chunks; i++ {
+		sectionReader := io.NewSectionReader(tmpFile, i*chunkSize, chunkSize)
+		result, err = upload(int(i), sectionReader)
+		if err != nil {
+			return "", err
+		}
+	}
+	return result, nil
 }
 
 func New(apiServerURL string) *Client {

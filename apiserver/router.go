@@ -72,6 +72,7 @@ func registerAPIServer(server *APIServer) http.Handler {
 		router.POST(AddMemberToChatRoom, ginx.G(server.AddMemberToChatRoom).JSON())
 		router.POST(InviteMemberToChatRoom, ginx.G(server.InviteMemberToChatRoom).JSON())
 		router.POST(ForwardMsg, ginx.G(server.ForwardMsg).JSON())
+		router.POST(UploadFile, ginx.G(server.UploadFile).JSON())
 	}
 	return engine.Handler()
 }
