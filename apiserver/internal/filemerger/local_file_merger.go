@@ -23,7 +23,7 @@ type redisLocalFileMerger struct {
 
 // Add is a method that adds a file to a Redis list.
 func (r *redisLocalFileMerger) Add(ctx context.Context, file string) error {
-	return r.client.LPush(ctx, r.fileHash, file).Err()
+	return r.client.RPush(ctx, r.fileHash, file).Err()
 }
 
 // Merge is a method that merges all files in a Redis list and checks if the hash of the merged file matches the fileHash.
