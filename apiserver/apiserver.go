@@ -323,7 +323,7 @@ func (a *APIServer) startListen() error {
 	}
 	// 尝试去注册消息回调
 	// 已经在一个容器内了，直接用localhost
-	return a.client.HookSyncMsg(context.Background(), "localhost", port)
+	return a.client.HookSyncMsg(a.ctx, "localhost", port)
 }
 
 func (a *APIServer) Run(addr string) error {
