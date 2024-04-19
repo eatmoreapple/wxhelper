@@ -242,7 +242,9 @@ func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Read
 
 	const chunkSize int64 = (1 << 20) / 2
 
-	chunks := (stat.Size() + chunkSize - 1) / chunkSize
+	fileSize := stat.Size()
+
+	chunks := (fileSize + chunkSize - 1) / chunkSize
 
 	// closure function to upload file
 	upload := func(chunk int, reader io.Reader) (string, error) {
@@ -271,11 +273,7 @@ func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Read
 
 	var result string
 	for i := int64(0); i < chunks; i++ {
-		size := chunkSize
-		if i == chunks-1 {
-			size = stat.Size() - i*chunkSize
-		}
-		sectionReader := io.NewSectionReader(tmpFile, i*chunkSize, size)
+		sectionReader := io.NewSectionReader(tmpFile, i*chunkSize, chunkSize)
 		result, err = upload(int(i), sectionReader)
 		if err != nil {
 			return "", err
