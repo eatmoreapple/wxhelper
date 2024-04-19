@@ -26,10 +26,10 @@ func (l loginChecker) Check(ctx context.Context) {
 		}
 		ok, err := l.srv.client.CheckLogin(context.Background())
 		if err != nil {
-			log.Error().Err(err).Msg("check login status")
+			log.Ctx(ctx).Error().Err(err).Msg("check login status")
 			continue
 		}
-		log.Info().Bool("login", ok).Msg("check login")
+		log.Ctx(ctx).Info().Bool("login", ok).Msg("check login")
 		if ok {
 			l.srv.login()
 			continue
