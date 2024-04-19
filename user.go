@@ -199,6 +199,8 @@ func (g *Group) Info() (*GroupInfo, error) {
 	return g.Owner().bot.client.GetChatRoomInfo(g.Owner().bot.Context(), g.Wxid)
 }
 
+type Groups []*Group
+
 func (g Groups) Search(limit uint, searchFunc func(group *Group) bool) Groups {
 	var search = make(Groups, 0)
 	for _, group := range g {
@@ -212,7 +214,17 @@ func (g Groups) Search(limit uint, searchFunc func(group *Group) bool) Groups {
 	return search
 }
 
-type Groups []*Group
+func (g Groups) SearchByWxID(wxID string) (*Group, bool) {
+	search := g.Search(1, func(group *Group) bool { return group.Wxid == wxID })
+	if len(search) == 0 {
+		return nil, false
+	}
+	return search[0], true
+}
+
+func (g Groups) SearchByNickname(nickname string, limit uint) Groups {
+	return g.Search(limit, func(group *Group) bool { return group.Nickname == nickname })
+}
 
 type Members []*User
 
