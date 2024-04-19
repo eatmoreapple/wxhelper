@@ -222,7 +222,11 @@ func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Read
 	if err != nil {
 		return "", err
 	}
-	defer func() { _ = tmpFile.Close() }()
+	// close the file and remove it when function returns
+	defer func() {
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	h := sha256.New()
 
