@@ -4,13 +4,12 @@ import (
 	"context"
 	"github.com/eatmoreapple/ginx"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
-func initEngine() *gin.Engine {
+func initEngine(ctx context.Context) *gin.Engine {
 	engine := gin.Default()
-	engine.Use(func(c *gin.Context) { c.Request = c.Request.WithContext(log.Logger.WithContext(c.Request.Context())) })
+	engine.Use(func(c *gin.Context) { c.Request = c.Request.WithContext(ctx) })
 	return engine
 }
 
@@ -43,7 +42,7 @@ func loginRequired(authFunc func() bool) gin.HandlerFunc {
 }
 
 func registerAPIServer(server *APIServer) http.Handler {
-	engine := initEngine()
+	engine := initEngine(server.ctx)
 
 	router := ginx.NewRouter(engine)
 

@@ -24,50 +24,6 @@ import (
 
 var ErrLogout = errors.New("logout")
 
-type SendImageRequest struct {
-	To    string `json:"to"`
-	Image string `json:"image"`
-}
-
-type SendTextRequest struct {
-	To      string `json:"to"`
-	Content string `json:"content"`
-}
-
-type SendFileRequest struct {
-	To   string `json:"to"`
-	File string `json:"file"`
-}
-
-type GetChatRoomInfoRequest struct {
-	ChatRoomID string `json:"chatRoomId"`
-}
-
-type GetMemberFromChatRoomRequest struct {
-	ChatRoomID string `json:"chatRoomId"`
-}
-
-type SendAtTextRequest struct {
-	GroupID string   `json:"groupId"`
-	AtList  []string `json:"atList"`
-	Content string   `json:"content"`
-}
-
-type AddMemberToChatRoomRequest struct {
-	ChatRoomID string   `json:"chatRoomId"`
-	MemberIds  []string `json:"memberIds"`
-}
-
-type InviteMemberToChatRoomRequest struct {
-	ChatRoomID string   `json:"chatRoomId"`
-	MemberIds  []string `json:"memberIds"`
-}
-
-type ForwardMsgRequest struct {
-	WxID  string `json:"wxid"`
-	MsgID string `json:"msgId"`
-}
-
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client            *wxclient.Client
@@ -114,6 +70,11 @@ func (a *APIServer) GetUserInfo(ctx context.Context, _ ginx.Empty) (*Result[*Acc
 	return OK(account), nil
 }
 
+type SendTextRequest struct {
+	To      string `json:"to"`
+	Content string `json:"content"`
+}
+
 // SendText 发送文本消息
 func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[any], error) {
 	err := a.client.SendText(ctx, req.To, req.Content)
@@ -123,12 +84,22 @@ func (a *APIServer) SendText(ctx context.Context, req SendTextRequest) (*Result[
 	return OK[any](nil), nil
 }
 
+type SendImageRequest struct {
+	To    string `json:"to"`
+	Image string `json:"image"`
+}
+
 func (a *APIServer) SendImage(ctx context.Context, req SendImageRequest) (*Result[any], error) {
 	err := a.client.SendImage(ctx, req.To, req.Image)
 	if err != nil {
 		return nil, err
 	}
 	return OK[any](nil), nil
+}
+
+type SendFileRequest struct {
+	To   string `json:"to"`
+	File string `json:"file"`
 }
 
 func (a *APIServer) SendFile(ctx context.Context, req SendFileRequest) (*Result[any], error) {
@@ -164,12 +135,20 @@ func (a *APIServer) SyncMessage(ctx context.Context, _ ginx.Empty) (*Result[[]*M
 	return OK(messages), nil
 }
 
+type GetChatRoomInfoRequest struct {
+	ChatRoomID string `json:"chatRoomId"`
+}
+
 func (a *APIServer) GetChatRoomDetail(ctx context.Context, req GetChatRoomInfoRequest) (*Result[*ChatRoomInfo], error) {
 	info, err := a.client.GetChatRoomDetail(ctx, req.ChatRoomID)
 	if err != nil {
 		return nil, err
 	}
 	return OK(info), nil
+}
+
+type GetMemberFromChatRoomRequest struct {
+	ChatRoomID string `json:"chatRoomId"`
 }
 
 func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFromChatRoomRequest) (*Result[[]*Profile], error) {
@@ -212,6 +191,12 @@ func (a *APIServer) GetMemberFromChatRoom(ctx context.Context, req GetMemberFrom
 	return OK(result), nil
 }
 
+type SendAtTextRequest struct {
+	GroupID string   `json:"groupId"`
+	AtList  []string `json:"atList"`
+	Content string   `json:"content"`
+}
+
 func (a *APIServer) SendAtText(ctx context.Context, req SendAtTextRequest) (*Result[any], error) {
 	if err := a.client.SendAtText(ctx, wxclient.SendAtTextOption{
 		ChatRoomID: req.GroupID,
@@ -223,6 +208,11 @@ func (a *APIServer) SendAtText(ctx context.Context, req SendAtTextRequest) (*Res
 	return OK[any](nil), nil
 }
 
+type AddMemberToChatRoomRequest struct {
+	ChatRoomID string   `json:"chatRoomId"`
+	MemberIds  []string `json:"memberIds"`
+}
+
 func (a *APIServer) AddMemberToChatRoom(ctx context.Context, req AddMemberToChatRoomRequest) (*Result[any], error) {
 	err := a.client.AddMemberIntoChatRoom(ctx, req.ChatRoomID, req.MemberIds)
 	if err != nil {
@@ -231,12 +221,22 @@ func (a *APIServer) AddMemberToChatRoom(ctx context.Context, req AddMemberToChat
 	return OK[any](nil), nil
 }
 
+type InviteMemberToChatRoomRequest struct {
+	ChatRoomID string   `json:"chatRoomId"`
+	MemberIds  []string `json:"memberIds"`
+}
+
 func (a *APIServer) InviteMemberToChatRoom(ctx context.Context, req InviteMemberToChatRoomRequest) (*Result[any], error) {
 	err := a.client.InviteMemberToChatRoom(ctx, req.ChatRoomID, req.MemberIds)
 	if err != nil {
 		return nil, err
 	}
 	return OK[any](nil), nil
+}
+
+type ForwardMsgRequest struct {
+	WxID  string `json:"wxid"`
+	MsgID string `json:"msgId"`
 }
 
 func (a *APIServer) ForwardMsg(ctx context.Context, req ForwardMsgRequest) (*Result[any], error) {
@@ -318,7 +318,7 @@ func (a *APIServer) startListen() error {
 			// 当 msgListener 停止之后 APIServer 也随之停止
 			defer a.stop(stopReason)
 			stopReason = msgListener.ListenAndServe(handler)
-			log.Error().Err(stopReason).Msg("listen and serve message failed")
+			log.Ctx(a.ctx).Error().Err(stopReason).Msg("listen and serve message failed")
 		}()
 	}
 	// 尝试去注册消息回调
@@ -340,6 +340,7 @@ func (a *APIServer) Run(addr string) error {
 
 func New(client *wxclient.Client, fileMergerFactory filemerger.Factory, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	ctx, cancel := context.WithCancelCause(context.Background())
+	ctx = log.Logger.WithContext(ctx)
 	srv := &APIServer{
 		client:            client,
 		msgBuffer:         msgBuffer,
