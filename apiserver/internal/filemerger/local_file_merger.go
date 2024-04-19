@@ -5,12 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/eatmoreapple/env"
 	"github.com/go-redis/redis/v8"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	_ "unsafe"
 )
 
 // redisLocalFileMerger is a struct that holds a Redis client, filename and fileHash.
@@ -18,6 +18,7 @@ type redisLocalFileMerger struct {
 	client   *redis.Client
 	filename string
 	fileHash string
+	tempDir  string
 }
 
 // Add is a method that adds a file to a Redis list.
@@ -36,7 +37,7 @@ func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
 	defer r.remove(files)
 
 	// merge files
-	finalFile, err := os.CreateTemp(env.Name("TEMP_DIR").String(), "*")
+	finalFile, err := os.CreateTemp(r.tempDir, "*")
 	if err != nil {
 		return "", err
 	}
@@ -80,6 +81,11 @@ func (r *redisLocalFileMerger) remove(files []string) {
 	r.client.Del(context.Background(), r.fileHash)
 }
 
+// do not import "github.com/eatmoreapple/wxhelper/internal/wxclient" directly
+//
+//go:linkname tempDir github.com/eatmoreapple/wxhelper/internal/wxclient.tempDir
+func tempDir() string
+
 // localFileMergerFactory is a struct that holds a Redis client.
 type localFileMergerFactory struct {
 	client *redis.Client
@@ -92,5 +98,10 @@ func (l *localFileMergerFactory) New(key string) (FileMerger, error) {
 		return nil, errors.New("invalid key")
 	}
 	filename, fileHash := items[0], items[1]
-	return &redisLocalFileMerger{client: l.client, filename: filename, fileHash: fileHash}, nil
+	return &redisLocalFileMerger{
+		client:   l.client,
+		filename: filename,
+		fileHash: fileHash,
+		tempDir:  tempDir(),
+	}, nil
 }
