@@ -34,7 +34,7 @@ func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
 		return "", err
 	}
 	// remove files from redis after merge
-	defer r.remove(files)
+	defer r.remove(ctx)
 
 	// merge files
 	finalFile, err := os.CreateTemp(r.tempDir, "*")
@@ -45,22 +45,26 @@ func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
 
 	writer := sha256.New()
 
+	multiWriter := io.MultiWriter(finalFile, writer)
+
 	// merge function is an inner function to merge files
-	merge := func(f io.Reader) error {
-		if closer, ok := f.(io.Closer); ok {
-			defer func() { _ = closer.Close() }()
+	mergeAndRemove := func(filepath string) error {
+		f, err := os.Open(filepath)
+		if err != nil {
+			return err
 		}
-		_, err := io.Copy(finalFile, io.TeeReader(f, writer))
+		defer func() {
+			_ = f.Close()
+			_ = os.Remove(filepath)
+		}()
+		_, err = io.Copy(multiWriter, f)
 		return err
 	}
 
 	// merge files
 	for _, file := range files {
-		f, err := os.Open(file)
-		if err != nil {
-			return "", err
-		}
-		if err = merge(f); err != nil {
+		// merge file and remove it
+		if err = mergeAndRemove(file); err != nil {
 			return "", err
 		}
 	}
@@ -74,11 +78,8 @@ func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
 }
 
 // remove is a method that removes all files from the local filesystem and deletes the Redis list.
-func (r *redisLocalFileMerger) remove(files []string) {
-	for _, file := range files {
-		_ = os.Remove(file)
-	}
-	r.client.Del(context.Background(), r.fileHash)
+func (r *redisLocalFileMerger) remove(ctx context.Context) {
+	r.client.Del(ctx, r.fileHash)
 }
 
 // do not import "github.com/eatmoreapple/wxhelper/internal/wxclient" directly
