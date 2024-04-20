@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/eatmoreapple/ginx"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -45,6 +46,11 @@ func registerAPIServer(server *APIServer) http.Handler {
 	engine := initEngine(server.ctx)
 
 	router := ginx.NewRouter(engine)
+
+	router.ErrorHandler = func(ctx *gin.Context, err error) {
+		log.Ctx(ctx.Request.Context()).Error().Err(err).Msg("http error")
+		ctx.JSON(http.StatusOK, Err[string](err.Error()))
+	}
 
 	engine.Use(activeRequired(server.ctx))
 
