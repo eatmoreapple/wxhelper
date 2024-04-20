@@ -5,31 +5,30 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/go-redis/redis/v8"
+	"github.com/eatmoreapple/wxhelper/apiserver/internal/filemerger/internal"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	_ "unsafe"
 )
 
-// redisLocalFileMerger is a struct that holds a Redis client, filename and fileHash.
-type redisLocalFileMerger struct {
-	client   *redis.Client
+// localFileMerger is a struct that holds a Redis client, filename and fileHash.
+type localFileMerger struct {
+	cache    internal.Cache
 	filename string
 	fileHash string
 	tempDir  string
 }
 
 // Add is a method that adds a file to a Redis list.
-func (r *redisLocalFileMerger) Add(ctx context.Context, file string) error {
-	return r.client.RPush(ctx, r.fileHash, file).Err()
+func (r *localFileMerger) Add(ctx context.Context, file string) error {
+	return r.cache.Add(ctx, r.fileHash, file)
 }
 
 // Merge is a method that merges all files in a Redis list and checks if the hash of the merged file matches the fileHash.
-func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
+func (r *localFileMerger) Merge(ctx context.Context) (string, error) {
 	// try to get all files from redis
-	files, err := r.client.LRange(ctx, r.fileHash, 0, -1).Result()
+	files, err := r.cache.GetAll(ctx, r.fileHash)
 	if err != nil {
 		return "", err
 	}
@@ -78,31 +77,6 @@ func (r *redisLocalFileMerger) Merge(ctx context.Context) (string, error) {
 }
 
 // remove is a method that removes all files from the local filesystem and deletes the Redis list.
-func (r *redisLocalFileMerger) remove(ctx context.Context) {
-	r.client.Del(ctx, r.fileHash)
-}
-
-// do not import "github.com/eatmoreapple/wxhelper/internal/wxclient" directly
-//
-//go:linkname tempDir github.com/eatmoreapple/wxhelper/internal/wxclient.tempDir
-func tempDir() string
-
-// localFileMergerFactory is a struct that holds a Redis client.
-type localFileMergerFactory struct {
-	client *redis.Client
-}
-
-// New is a method that creates a new instance of redisLocalFileMerger.
-func (l *localFileMergerFactory) New(key string) (FileMerger, error) {
-	items := strings.Split(key, ":")
-	if len(items) != 2 {
-		return nil, errors.New("invalid key")
-	}
-	filename, fileHash := items[0], items[1]
-	return &redisLocalFileMerger{
-		client:   l.client,
-		filename: filename,
-		fileHash: fileHash,
-		tempDir:  tempDir(),
-	}, nil
+func (r *localFileMerger) remove(ctx context.Context) {
+	_ = r.cache.DelAll(ctx, r.fileHash)
 }
