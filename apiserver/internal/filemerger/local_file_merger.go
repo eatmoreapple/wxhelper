@@ -73,7 +73,23 @@ func (r *localFileMerger) Merge(ctx context.Context) (string, error) {
 	if hex.EncodeToString(writer.Sum(nil)) != r.fileHash {
 		return "", errors.New("hash not equal")
 	}
-	return filepath.Base(finalFile.Name()), nil
+
+	_ = finalFile.Close()
+
+	newFilename := filepath.Join(r.tempDir, r.filename)
+
+	// remove the file if it exists
+	if err = os.Remove(newFilename); err != nil {
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+	}
+
+	// rename the file
+	if err = os.Rename(finalFile.Name(), newFilename); err != nil {
+		return "", err
+	}
+	return r.filename, nil
 }
 
 // remove is a method that removes all files from the local filesystem and deletes the Redis list.
