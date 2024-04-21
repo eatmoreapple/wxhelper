@@ -155,6 +155,9 @@ func (c *Client) SendImage(ctx context.Context, to string, img string) error {
 	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return err
 	}
+	if r.Code != 1 {
+		return errors.New(r.Msg)
+	}
 	return nil
 }
 

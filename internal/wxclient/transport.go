@@ -91,7 +91,7 @@ func (c *Transport) ForwardMessage(ctx context.Context, to, msgID string) (*http
 }
 
 func (c *Transport) SendImage(ctx context.Context, to, imagePath string) (*http.Response, error) {
-	url, err := urlpkg.Parse(c.BaseURL + "/api/sendImage")
+	url, err := urlpkg.Parse(c.BaseURL + "/api/sendImagesMsg")
 	if err != nil {
 		return nil, err
 	}
