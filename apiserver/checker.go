@@ -29,7 +29,6 @@ func (l loginChecker) Check(ctx context.Context) {
 			log.Ctx(ctx).Error().Err(err).Msg("check login status")
 			continue
 		}
-		log.Ctx(ctx).Info().Bool("login", ok).Msg("check login")
 		if ok {
 			l.srv.login()
 			continue
