@@ -305,6 +305,18 @@ func (a *APIServer) UploadFile(ctx context.Context, req UploadRequest) (*Result[
 	return OK[string](filename), nil
 }
 
+type QuitChatRoomRequest struct {
+	ChatRoomId string `json:"chatRoomId"`
+}
+
+func (a *APIServer) QuitChatRoom(ctx context.Context, req QuitChatRoomRequest) (*Result[any], error) {
+	err := a.client.QuitChatRoom(ctx, req.ChatRoomId)
+	if err != nil {
+		return nil, err
+	}
+	return OK[any](nil), nil
+}
+
 func (a *APIServer) startListen() error {
 	port := env.Name("MSG_LISTENER_PORT").IntOrElse(9999)
 	{

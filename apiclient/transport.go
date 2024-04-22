@@ -302,3 +302,23 @@ func (c *Transport) UploadFile(ctx context.Context, request apiserver.UploadRequ
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	return c.httpClient.Do(req)
 }
+
+func (c *Transport) QuitChatRoom(ctx context.Context, chatRoomId string) (*http.Response, error) {
+	url, err := urlpkg.Parse(c.baseURL + apiserver.QuitChatRoom)
+	if err != nil {
+		return nil, err
+	}
+	var payload = apiserver.QuitChatRoomRequest{
+		ChatRoomId: chatRoomId,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	return c.httpClient.Do(req)
+}

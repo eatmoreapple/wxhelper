@@ -303,6 +303,22 @@ func (c *Client) ForwardMsg(ctx context.Context, msgID, wxID string) error {
 	return nil
 }
 
+func (c *Client) QuitChatRoom(ctx context.Context, chatRoomId string) error {
+	resp, err := c.transport.QuitChatRoom(ctx, chatRoomId)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	if r.Code <= 0 {
+		return errors.New("quit chatroom failed")
+	}
+	return nil
+}
+
 func New(transport *Transport) *Client {
 	return &Client{transport: transport}
 }
