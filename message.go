@@ -77,7 +77,7 @@ func (m Message) SaveImage(writer io.Writer) error {
 	return err
 }
 
-func (m Message) Forward(u *User) error {
+func (m Message) ForwardTo(u *User) error {
 	return m.Owner().ForwardMessage(&m, u)
 }
 
