@@ -45,6 +45,14 @@ func loginRequired(authFunc func() bool) gin.HandlerFunc {
 func registerAPIServer(server *APIServer) http.Handler {
 	engine := initEngine(server.ctx)
 
+	// global context middleware
+	if onContext := server.OnContext; onContext != nil {
+		engine.Use(func(c *gin.Context) {
+			ctx := onContext(c.Request.Context())
+			c.Request = c.Request.WithContext(ctx)
+		})
+	}
+
 	router := ginx.NewRouter(engine)
 
 	router.ErrorHandler = func(ctx *gin.Context, err error) {
