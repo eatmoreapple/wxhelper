@@ -10,7 +10,6 @@ import (
 	. "github.com/eatmoreapple/wxhelper/internal/models"
 	"github.com/eatmoreapple/wxhelper/internal/wxclient"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -34,6 +33,7 @@ type APIServer struct {
 	ctx               context.Context
 	stop              context.CancelCauseFunc
 	checker           Checker
+	OnContext         func(context.Context) context.Context
 }
 
 func (a *APIServer) IsLogin() bool {
@@ -341,12 +341,6 @@ func (a *APIServer) Run(addr string) error {
 
 func New(client *wxclient.Client, fileMergerFactory filemerger.Factory, msgBuffer msgbuffer.MessageBuffer) *APIServer {
 	ctx, cancel := context.WithCancelCause(context.Background())
-	{
-		// initialize log
-		writer := io.MultiWriter(zerolog.ConsoleWriter{Out: os.Stderr}, NewRotateWriter())
-		log.Logger = log.Output(writer).With().Caller().Timestamp().Logger()
-		ctx = log.Logger.WithContext(ctx)
-	}
 	srv := &APIServer{
 		client:            client,
 		msgBuffer:         msgBuffer,
