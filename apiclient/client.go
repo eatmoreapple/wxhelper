@@ -80,7 +80,14 @@ func (c *Client) SendText(ctx context.Context, to, content string) error {
 }
 
 func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error {
-	path, err := c.UploadFile(ctx, "", img)
+	var filename string
+	if f, ok := img.(*os.File); ok {
+		// a correct image name is required
+		filename = filepath.Base(f.Name())
+	} else {
+		filename = uuid.New().String() + ".png"
+	}
+	path, err := c.UploadFile(ctx, filename, img)
 	if err != nil {
 		return err
 	}
@@ -97,7 +104,13 @@ func (c *Client) SendImage(ctx context.Context, to string, img io.Reader) error 
 }
 
 func (c *Client) SendFile(ctx context.Context, to string, file io.Reader) error {
-	path, err := c.UploadFile(ctx, "", file)
+	var filename string
+	if f, ok := file.(*os.File); ok {
+		filename = filepath.Base(f.Name())
+	} else {
+		filename = uuid.New().String()
+	}
+	path, err := c.UploadFile(ctx, filename, file)
 	if err != nil {
 		return err
 	}
@@ -211,13 +224,6 @@ func (c *Client) ForwardMsg(ctx context.Context, wxID, msgID string) error {
 }
 
 func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Reader) (string, error) {
-	if len(filename) == 0 {
-		if f, ok := reader.(*os.File); ok {
-			filename = filepath.Base(f.Name())
-		} else {
-			filename = uuid.New().String()
-		}
-	}
 	tmpFile, err := os.CreateTemp("", "*")
 	if err != nil {
 		return "", err
