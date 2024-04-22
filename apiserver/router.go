@@ -53,6 +53,9 @@ func registerAPIServer(server *APIServer) http.Handler {
 		})
 	}
 
+	pingRouter := ginx.NewRouter(engine)
+	pingRouter.GET("/ping", ginx.G(server.Ping).String())
+
 	router := ginx.NewRouter(engine)
 
 	router.ErrorHandler = func(ctx *gin.Context, err error) {
