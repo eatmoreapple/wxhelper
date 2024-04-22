@@ -112,3 +112,7 @@ func (a *Account) AddMemberIntoChatRoom(group *Group, users ...*Friend) error {
 func (a *Account) ForwardMessage(msg *Message, user *User) error {
 	return a.bot.client.ForwardMsg(a.bot.Context(), user.Wxid, strconv.FormatInt(msg.MsgId, 10))
 }
+
+func (a *Account) QuitChatRoom(group *Group) error {
+	return a.bot.client.QuitChatRoom(a.bot.Context(), group.User.Wxid)
+}

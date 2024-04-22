@@ -288,6 +288,19 @@ func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Read
 	return result, nil
 }
 
+func (c *Client) QuitChatRoom(ctx context.Context, chatRoomId string) error {
+	resp, err := c.transport.QuitChatRoom(ctx, chatRoomId)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var r Result[any]
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return err
+	}
+	return r.Err()
+}
+
 func New(apiServerURL string) *Client {
 	return &Client{
 		transport: &Transport{

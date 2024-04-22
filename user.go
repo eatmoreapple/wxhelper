@@ -188,6 +188,10 @@ func (g *Group) AddMemberIntoChatRoom(friends ...*Friend) error {
 	return g.Owner().AddMemberIntoChatRoom(g, friends...)
 }
 
+func (g *Group) Quit() error {
+	return g.Owner().QuitChatRoom(g)
+}
+
 type GroupInfo struct {
 	ChatRoomID string
 	Notice     string
