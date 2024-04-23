@@ -24,6 +24,11 @@ import (
 
 var ErrLogout = errors.New("logout")
 
+const (
+	loginStatus  int32 = 1
+	logoutStatus int32 = 0
+)
+
 // APIServer 用来屏蔽微信的接口
 type APIServer struct {
 	client            *wxclient.Client
@@ -38,16 +43,16 @@ type APIServer struct {
 }
 
 func (a *APIServer) IsLogin() bool {
-	return atomic.LoadInt32(&a.status) == 1
+	return atomic.LoadInt32(&a.status) == loginStatus
 }
 
 func (a *APIServer) logout() {
-	atomic.StoreInt32(&a.status, 0)
+	atomic.StoreInt32(&a.status, logoutStatus)
 	a.stop(ErrLogout)
 }
 
 func (a *APIServer) login() {
-	atomic.StoreInt32(&a.status, 1)
+	atomic.StoreInt32(&a.status, loginStatus)
 }
 
 func (a *APIServer) Ping(_ context.Context, _ ginx.Empty) (string, error) {
