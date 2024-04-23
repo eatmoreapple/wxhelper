@@ -34,6 +34,7 @@ type APIServer struct {
 	stop              context.CancelCauseFunc
 	checker           Checker
 	OnContext         func(context.Context) context.Context
+	Context           context.Context
 }
 
 func (a *APIServer) IsLogin() bool {
@@ -340,6 +341,10 @@ func (a *APIServer) startListen() error {
 }
 
 func (a *APIServer) Run(addr string) error {
+	if a.Context == nil {
+		a.Context = context.Background()
+	}
+	a.ctx, a.stop = context.WithCancelCause(a.Context)
 	if err := a.startListen(); err != nil {
 		return err
 	}
@@ -352,13 +357,10 @@ func (a *APIServer) Run(addr string) error {
 }
 
 func New(client *wxclient.Client, fileMergerFactory filemerger.Factory, msgBuffer msgbuffer.MessageBuffer) *APIServer {
-	ctx, cancel := context.WithCancelCause(context.Background())
 	srv := &APIServer{
 		client:            client,
 		msgBuffer:         msgBuffer,
 		fileMergerFactory: fileMergerFactory,
-		ctx:               ctx,
-		stop:              cancel,
 	}
 	srv.checker = &loginChecker{srv: srv, loopInterval: time.Second / 5}
 	return srv
