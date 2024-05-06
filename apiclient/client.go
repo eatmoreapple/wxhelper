@@ -272,11 +272,6 @@ func (c *Client) UploadFile(ctx context.Context, filename string, reader io.Read
 		return r.Data, nil
 	}
 
-	// reset the file pointer
-	if _, err = tmpFile.Seek(0, 0); err != nil {
-		return "", err
-	}
-
 	var result string
 	for i := int64(0); i < chunks; i++ {
 		sectionReader := io.NewSectionReader(tmpFile, i*chunkSize, chunkSize)
