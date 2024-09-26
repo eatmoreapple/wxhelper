@@ -21,6 +21,8 @@ github.com/eatmoreapple/env v0.0.0-20230613094802-da1bd2d529d4 h1:7OCnZ5Nr7dXrE2
 github.com/eatmoreapple/env v0.0.0-20230613094802-da1bd2d529d4/go.mod h1:6FwoAYtdFyNxe5UfWjmRui6WWt3CaRglffRFHCaGTIQ=
 github.com/eatmoreapple/ginx v0.0.0-20240228130012-0081381b9170 h1:8fxlsMmLvR8HW3hhjDSrnutTRBd63BnrHZELRQn7WUo=
 github.com/eatmoreapple/ginx v0.0.0-20240228130012-0081381b9170/go.mod h1:FK5vrrgHlwyflBgmsVnQr4G9V2VrcPXToY+A1tq+I9w=
+github.com/eatmoreapple/ginx v0.0.0-20240924062920-8fe959f6999e h1:MHAugzNwPlcv1qoi3gNBctHjr+XMc/pmDTb3io/Z9d0=
+github.com/eatmoreapple/ginx v0.0.0-20240924062920-8fe959f6999e/go.mod h1:FK5vrrgHlwyflBgmsVnQr4G9V2VrcPXToY+A1tq+I9w=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/gabriel-vasile/mimetype v1.4.3 h1:in2uUcidCuFcDKtdcBxlR0rJ1+fsokWf+uqxgUFjbI0=

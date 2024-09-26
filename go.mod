@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/eatmoreapple/env v0.0.0-20230613094802-da1bd2d529d4
-	github.com/eatmoreapple/ginx v0.0.0-20240228130012-0081381b9170
+	github.com/eatmoreapple/ginx v0.0.0-20240924062920-8fe959f6999e
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.6.0
